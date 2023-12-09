@@ -1,48 +1,18 @@
+#nullable disable
+
 public static class Day9
 {
     public static void Solve1()
     {
         List<List<int>> histories = ParseInput();
-        List<int> results = [];
-        foreach(List<int> seq in histories)
-        {
-            List<List<int>> seqs = BuildPyramid(seq);
-            int depth = seqs.Count - 1;
-            // Add the padding value and loop back to the start
-            seqs[depth].Add(0);
-            depth--;
-            while(depth >= 0)
-            {
-                seqs[depth].Add(seqs[depth].Last() + seqs[depth + 1].Last());
-                // Console.WriteLine(string.Join(',', seqs[depth]) + " <> " + string.Join(',', seqs[depth + 1])); 
-                depth--;
-            }
-            int extrapolation = seqs[0].Last();
-            results.Add(extrapolation);
-        }
+        List<int> results = ExtrapolateValues(histories, forward: true);
         // Console.WriteLine(string.Join(',',results));
         Console.WriteLine(results.Sum());
     }
     public static void Solve2()
     {
         List<List<int>> histories = ParseInput();
-        List<int> results = [];
-        foreach(List<int> seq in histories)
-        {
-            List<List<int>> seqs = BuildPyramid(seq);
-            int depth = seqs.Count - 1;
-            // Add the padding value and loop back to the start
-            seqs[depth].Add(0);
-            depth--;
-            while(depth >= 0)
-            {
-                seqs[depth].Add(seqs[depth].First() - seqs[depth + 1].Last());
-                // Console.WriteLine($"@dept {depth}: Me {string.Join(',', seqs[depth])}  parent {string.Join(',', seqs[depth + 1])}"); 
-                depth--;
-            }
-            int extrapolation = seqs[0].Last();
-            results.Add(extrapolation);
-        }
+        List<int> results = ExtrapolateValues(histories, forward: false);
         Console.WriteLine(string.Join(',',results));
         Console.WriteLine(results.Sum());
     }
@@ -82,5 +52,30 @@ public static class Day9
             allZeroes = pyramid[depth].All(c => c == 0);
         }
         return pyramid;
+    }
+
+    static List<int> ExtrapolateValues(List<List<int>> histories, bool forward)
+    {
+        List<int> results = [];
+        foreach(List<int> seq in histories)
+        {
+            List<List<int>> seqs = BuildPyramid(seq);
+            int depth = seqs.Count - 1;
+            // Add the padding value and loop back to the start
+            seqs[depth].Add(0);
+            depth--;
+            while(depth >= 0)
+            {
+                if (forward)
+                    seqs[depth].Add(seqs[depth].Last() + seqs[depth + 1].Last());
+                else
+                    seqs[depth].Add(seqs[depth].First() - seqs[depth + 1].Last());
+                // Console.WriteLine($"@dept {depth}: Me {string.Join(',', seqs[depth])}  parent {string.Join(',', seqs[depth + 1])}"); 
+                depth--;
+            }
+            int extrapolation = seqs[0].Last();
+            results.Add(extrapolation);
+        }
+        return results;
     }
 }
