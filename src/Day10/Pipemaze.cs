@@ -292,12 +292,12 @@ public static class Day10
             }
         }
 
-        List<string> output = ConvertCharArrayToList(inp);
-        foreach(string s in output)
-        {
-            // Console.WriteLine(s.ToString());
-        }
-        System.IO.File.WriteAllLines("10.out", output);
+        // List<string> output = ConvertCharArrayToList(inp);
+        // foreach(string s in output)
+        // {
+        //     // Console.WriteLine(s.ToString());
+        // }
+        // System.IO.File.WriteAllLines("10.out", output);
         Console.WriteLine(count);
         
     }
