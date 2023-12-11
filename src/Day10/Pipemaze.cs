@@ -98,35 +98,22 @@ public static class Day10
             }
         }
 
-        // Flood Fill large maze
-        Stack<(int,int)> stack = new();
-        List<(int,int)> visited = [];
-        stack.Push(new(0,0));
-        
-        while (stack.Count > 0)
-        {
-            (int r, int c) = stack.Pop();
-            if (!visited.Contains((r,c)))
-            {
-                visited.Add((r,c));
-                if (InBounds(r,c, maze.Length, maze[0].Length) && (!lp.Contains(new (r,c))))
-                {
-                    maze[r][c] = '0';
-                    stack.Push((r,c-1));
-                    stack.Push((r,c+1));
-                    stack.Push((r-1,c));
-                    stack.Push((r+1,c));
-                }
-            }
-        }
-
-        // Mark the unvisited nodes with '1'
-        for(int row = 0; row < maze.Length; row++){
+        // I've read somewhere that if I cross a path I am now in the maze.
+        // If I count every 2nd row, There exist no strange symbols
+        // If I'm in the maze, and the thing above me is  not on path, colour that one.
+        // I won't be checking the scanrow anyways, no need to test. 
+        for(int row = 1; row < maze.Length; row += 2){
+            bool enclosed = false;
             for(int col = 0; col < maze[0].Length; col++)
             {
-                if (!lp.Contains(new (row,col)) && maze[row][col] != '0')
+                if (lp.Contains(new(row,col)))
                 {
-                    maze[row][col] = '1';
+                    enclosed = !enclosed;
+                    continue;
+                }
+                if (enclosed && !lp.Contains(new (row - 1,col)))
+                {
+                    maze[row - 1][col] = '1';
                 }
             }
         }
@@ -146,7 +133,7 @@ public static class Day10
         }
 
         // Write output.
-        List<string> output = ConvertCharArrayToList(inp);
+        List<string> output = ConvertCharArrayToList(maze);
         File.WriteAllLines("src/Day10/10.out", output);
         Console.WriteLine(count);
         
@@ -240,17 +227,9 @@ public static class Day10
             var (t1, t2) = Targets(cc, cur);
             // Console.WriteLine("cur: " + cc + " targets: " + (t1,t2) + " prev: " + path[path.Count-2]);
             if (t1 == path[path.Count - 2])
-            {  
-                
                 path.Add(t2);
-                // curCoord = t2;
-            }
             else
-            {
                 path.Add(t1);
-                // curCoord = t1;
-            }
-            // Console.WriteLine(path.Count);
         }
         return path;
     }
