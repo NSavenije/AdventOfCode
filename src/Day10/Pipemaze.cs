@@ -47,7 +47,8 @@ public static class Day10
         
         // funcWatch = Stopwatch.StartNew();
         // Scale up maze
-        List<Coord> lp = [];
+        HashSet<Coord> sp = new(path);
+        HashSet<Coord> lp = [];
         int rows = inp.Length;
         int cols = inp[0].Length;
 
@@ -62,7 +63,7 @@ public static class Day10
                 char c = inp[i / 2][j / 2];
                 maze[i][j] = c;
                 maze[i + 1][j + 1] = '.';
-                if (path.Contains(new(i / 2, j / 2)))
+                if (sp.Contains(new(i / 2, j / 2)))
                 {
                     lp.Add(new(i, j));
                 }
@@ -78,7 +79,7 @@ public static class Day10
                     case 'L':
                         maze[i + 0][j + 1] = '-';
                         maze[i + 1][j + 0] = '.';
-                        if (path.Contains(new(i / 2, j / 2)))
+                        if (sp.Contains(new(i / 2, j / 2)))
                         {
                             lp.Add(new(i, j + 1));
                         }
@@ -87,7 +88,7 @@ public static class Day10
                     case '7':
                         maze[i + 0][j + 1] = '.';
                         maze[i + 1][j + 0] = '|';
-                        if (path.Contains(new(i / 2, j / 2)))
+                        if (sp.Contains(new(i / 2, j / 2)))
                         {
                             lp.Add(new(i + 1, j));
                         }
@@ -95,7 +96,7 @@ public static class Day10
                     case 'F':
                         maze[i + 0][j + 1] = '-';
                         maze[i + 1][j + 0] = '|';
-                        if (path.Contains(new(i / 2, j / 2)))
+                        if (sp.Contains(new(i / 2, j / 2)))
                         {
                             lp.Add(new(i, j + 1));
                             lp.Add(new(i + 1, j));
@@ -104,12 +105,13 @@ public static class Day10
                 }  
             }
         }
+
         // Console.WriteLine($"Scale up maze = {funcWatch.ElapsedMilliseconds}ms");
         // funcWatch = Stopwatch.StartNew();
-        // I've read somewhere that if I cross a path I am now in the maze.
-        // If I count every 2nd row, There exist no strange symbols
-        // If I'm in the maze, and the thing above me is  not on path, colour that one.
-        // I won't be checking the scanrow anyways, no need to test. 
+        // I've read somewhere that if I cross permiter I am now in the maze.
+        // If I count every 2nd row, There exist no strange symbols (F7LJ)
+        // If I'm in the maze, and the cell above me is not on path, colour that one.
+        // I won't be checking the scan row anyways, no need to test. 
         for(int row = 1; row < maze.Length; row += 2){
             bool enclosed = false;
             for(int col = 0; col < maze[0].Length; col += 2)
@@ -146,7 +148,7 @@ public static class Day10
         // funcWatch = Stopwatch.StartNew();
         // Write output.
         List<string> output = ConvertCharArrayToList(maze);
-        File.WriteAllLines("src/Day10/10.out", output);
+        // File.WriteAllLines("src/Day10/10.out", output);
         Console.WriteLine(count);
         // Console.WriteLine($"Write output = {funcWatch.ElapsedMilliseconds}ms");
         
