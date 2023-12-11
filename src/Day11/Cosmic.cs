@@ -16,54 +16,28 @@ public static class Day11
 
     static void Solve(int expansion = 2)
     {
-        using StreamReader sr = new("src/Day11/11.in");
-        string line;
+        List<string> input = File.ReadAllLines("src/Day11/11.in").ToList();
 
-        List<string> input = [];
         int counter = 0;
         List<int> rows = [];
-        List<int> cols = [];
-        while ((line = sr.ReadLine()) != null)
-        {
-            input.Add(line);
-            if (line.All(c => c == '.'))
-                rows.Add(counter);
-            counter++;
-        }
-        List<string> transposed = TransposeRowsToColumns(input);
-        List<string> result = [];
-        counter = 0;
-
-        foreach(string s in transposed)
-        {
-            result.Add(s);
-            if (s.All(c => c == '.'))
-                cols.Add(counter);
-            counter++;
-        }
-        result = TransposeRowsToColumns(result);
-
-
-        // System.IO.File.WriteAllLines("11.out", result);
-        int[,] universe = new int[result[0].Length,result.Count];
-        counter = 0;
         List<(int x,int y)> galaxies = [];
-        for(int x = 0; x < universe.GetLength(0); x++)
+        foreach(string s in input)
         {
-            for(int y = 0; y < universe.GetLength(1); y++)
-            {
-                if (result[y][x] == '#')
-                {
-                    galaxies.Add((x, y));
-                    universe[x,y] = counter++;
-                }
-                else
-                    universe[x,y] = result[y][x];
-            }
+            if (s.All(c => c == '.'))
+                rows.Add(counter);
+            else if (s.Contains('#'))
+                galaxies.AddRange(s.AllIndexesOf("#").Select(x => (counter,x)));
+            counter++;
         }
-
+        
+        List<string> transposed = Transpose(input);
+        List<int> cols = transposed
+            .Select((s, index) => new { Index = index, String = s })
+            .Where(item => item.String.All(c => c == '.'))
+            .Select(item => item.Index)
+            .ToList();
+        
         long sum = 0;
-        List<int> dists = [];
         foreach((int x1,int y1) in galaxies)
         {
             foreach((int x2,int y2) in galaxies)
@@ -78,17 +52,13 @@ public static class Day11
                 int ys = Enumerable.Range(low, high - low).Intersect(rows).Count() * (expansion - 1);
                 int dist = Math.Abs(x2 - x1) + Math.Abs(y2 - y1) + xs + ys;
                 sum += dist;
-                dists.Add(dist);
                 // Console.WriteLine($"({x1},{y1})-({x2},{y2}): {dist}({Math.Abs(x2 - x1)},{Math.Abs(y2 - y1)},{xs},{ys})");
             }
         }
-        Console.WriteLine(string.Join(',',cols));
-        Console.WriteLine(string.Join(',',rows));
-        Console.WriteLine(sum);
         
     }
 
-    static List<string> TransposeRowsToColumns(List<string> rows)
+    static List<string> Transpose(List<string> rows)
     {
         List<string> result = [];
 
@@ -102,5 +72,15 @@ public static class Day11
             result.Add(columnBuilder.ToString());
         }
         return result;
+    }
+
+    static IEnumerable<int> AllIndexesOf(this string c, string searchstring)
+    {
+        int minIndex = c.IndexOf(searchstring);
+        while (minIndex != -1)
+        {
+            yield return minIndex;
+            minIndex = c.IndexOf(searchstring, minIndex + searchstring.Length);
+        }
     }
 }
