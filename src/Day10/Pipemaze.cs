@@ -9,60 +9,8 @@ public static class Day10
     {
         string[] input = ParseInput();
         Coord root = GetRoot(input);
-        // Console.WriteLine(root);
-
-        Coord curCoord = new(-1,-1);
-
-        for(int row = root.Row - 1; row <= root.Row + 1; row++)
-        {
-            if (row > -1 && row < input[0].Length)
-            {
-                for(int col = root.Col - 1; col <= root.Col + 1; col++)
-                {
-                    if (col > -1 && col < input.Length)
-                    {
-                        char cur = input[row][col];
-                        var targets = Targets(new Coord(row, col), cur); 
-                        
-                        if ((targets.t1.Row == root.Row && targets.t1.Col == root.Col) ||
-                            (targets.t2.Row == root.Row && targets.t2.Col == root.Col))
-                            {
-                                // Console.WriteLine($"{cur}({row},{col}): {targets}");
-                                curCoord = new(row,col);
-                                break;
-                            }
-                    }
-                }
-            }
-        }
-        // Console.WriteLine(cu);
-        bool loop = false;
-        List<Coord> path = [];
-        path.Add(root);
-        path.Add(curCoord);
-        while(!loop)
-        {
-            Coord cc = curCoord;   
-            char cur = input[cc.Row][cc.Col];
-            if (cc == root)
-            {
-                loop = true;
-            }
-            var (t1, t2) = Targets(cc, cur);
-            // Console.WriteLine("cur: " + cc + " targets: " + (t1,t2) + " prev: " + path[path.Count-2]);
-            if (t1 == path[path.Count - 2])
-            {  
-                
-                path.Add(t2);
-                curCoord = t2;
-            }
-            else
-            {
-                path.Add(t1);
-                curCoord = t1;
-            }
-            // Console.WriteLine(path.Count);
-        }
+        Coord curCoord = GetStart(root, input);
+        List<Coord> path = GeneratePath([root,curCoord], input);
         Console.WriteLine((path.Count - 1) / 2);
     }
 
@@ -70,85 +18,18 @@ public static class Day10
     {
         string[] input = ParseInput();
         Coord root = GetRoot(input);
-        // Console.WriteLine(root);
+        Coord curCoord = GetStart(root, input);
+        List<Coord> path = GeneratePath([root,curCoord], input);
 
-        Coord curCoord = new(-1,-1);
-
-        for(int row = root.Row - 1; row <= root.Row + 1; row++)
-        {
-            
-            if (row > -1 && row < input[0].Length)
-            {
-                
-                for(int col = root.Col - 1; col <= root.Col + 1; col++)
-                {
-                    // Console.WriteLine($"row {row}, col {col}: cur {input[row][col]} {input.Length}");
-                    if (col > -1 && col < input[0].Length)
-                    {
-                        char cur = input[row][col];
-                        var (t1,t2) = Targets(new Coord(row, col), cur); 
-                        // Console.WriteLine($"{cur}({row},{col}): {targets}");
-                        if ((t1.Row == root.Row && t1.Col == root.Col) ||
-                            (t2.Row == root.Row && t2.Col == root.Col))
-                            {
-                                // Console.WriteLine($"{cur}({row},{col}): {targets}");
-                                curCoord = new(row,col);
-                                break;
-                            }
-                    }
-                }
-            }
-        }
-        // Console.WriteLine(cu);
-        bool loop = false;
-        List<Coord> path = [];
-        path.Add(root);
-        path.Add(curCoord);
-        while(!loop)
-        {
-            Coord cc = curCoord;   
-            // Console.WriteLine(curCoord);
-            char cur = input[cc.Row][cc.Col];
-            if (cc == root)
-            {
-                loop = true;
-            }
-            var (t1, t2) = Targets(cc, cur);
-            // Console.WriteLine("cur: " + cc + " targets: " + (t1,t2) + " prev: " + path[path.Count-2]);
-            if (t1 == path[path.Count - 2])
-            {  
-                
-                path.Add(t2);
-                curCoord = t2;
-            }
-            else
-            {
-                path.Add(t1);
-                curCoord = t1;
-            }
-            // Console.WriteLine(path.Count);
-        }
-
-
-        
-        // Console.WriteLine((path.Count - 1) / 2);
-
-        // If a bit is outside the loop make it 0
-        // If a bit is enclosed make it 1
-        // Count all 1's
-        // A bit is enclosed if: it neighbours only ? and Main loop cells
-        // A bit is not encloudes if: borders edge or borders not enclosed cell
-        // Just keep looping
-        // Each loop fill out more ? and 0
-        // at the very end all remaining ? will become 1
-        // first pass: if cell not part of main loop? if cell borders edge or 0? cell = o
+        // Convert string[] to char[][]
         char[][] inp = new char[input.Length][];
         for(int row = 0; row < input.Length; row++){
             inp[row] = input[row].ToCharArray();
         }
 
+        // Replace 'S' with actual symbol.
         var p1 = path[1];
-        var pn = path[path.Count - 3];
+        var pn = path[^3];
         foreach(char c in "F-7L|J")
         {
             var ts = Targets(root, c);
@@ -158,74 +39,66 @@ public static class Day10
             }
         }
         
-        // Outer perimeter determined. Now time to scale up
-        char[][] maze = DoubleSizeOfCharArray(inp, path, out List<Coord> lp);//new char[inp.Length * 2][];
-        
+        // Scale up maze
+        List<Coord> lp = [];
+        int rows = inp.Length;
+        int cols = inp[0].Length;
 
-        static char[][] DoubleSizeOfCharArray(char[][] inp, List<Coord> path, out List<Coord> lp)
+        char[][] maze = new char[rows * 2][];
+
+        for (int i = 0; i < rows * 2; i+=2)
         {
-            lp = [];
-            int rows = inp.Length;
-            int cols = inp[0].Length;
-
-            char[][] maze = new char[rows * 2][];
-
-            for (int i = 0; i < rows * 2; i+=2)
+            maze[i] = new char[cols * 2];
+            maze[i + 1] = new char[cols * 2];
+            for (int j = 0; j < cols * 2; j+=2)
             {
-                maze[i] = new char[cols * 2];
-                maze[i + 1] = new char[cols * 2];
-                for (int j = 0; j < cols * 2; j+=2)
+                char c = inp[i / 2][j / 2];
+                maze[i][j] = c;
+                maze[i + 1][j + 1] = '.';
+                if (path.Contains(new(i / 2, j / 2)))
                 {
-                    char c = inp[i / 2][j / 2];
-                    // Console.WriteLine($"{c} @ {i / 2},{j / 2}");
-                    maze[i][j] = c;
-                    maze[i + 1][j + 1] = '.';
-                    if (path.Contains(new(i / 2, j / 2)))
-                    {
-                        lp.Add(new(i, j));
-                    }
-                    
-                    switch (c)
-                    {
-                        case '.':
-                        case 'J':
-                            maze[i + 0][j + 1] = '.';
-                            maze[i + 1][j + 0] = '.';           
-                            break;
-                        case '-':
-                        case 'L':
-                            maze[i + 0][j + 1] = '-';
-                            maze[i + 1][j + 0] = '.';
-                            if (path.Contains(new(i / 2, j / 2)))
-                            {
-                                lp.Add(new(i, j + 1));
-                            }
-                            break;
-                        case '|':
-                        case '7':
-                            maze[i + 0][j + 1] = '.';
-                            maze[i + 1][j + 0] = '|';
-                            if (path.Contains(new(i / 2, j / 2)))
-                            {
-                                lp.Add(new(i + 1, j));
-                            }
-                            break;
-                        case 'F':
-                            maze[i + 0][j + 1] = '-';
-                            maze[i + 1][j + 0] = '|';
-                            if (path.Contains(new(i / 2, j / 2)))
-                            {
-                                lp.Add(new(i, j + 1));
-                                lp.Add(new(i + 1, j));
-                            }
-                            break;
-                    }  
+                    lp.Add(new(i, j));
                 }
+                
+                switch (c)
+                {
+                    case '.':
+                    case 'J':
+                        maze[i + 0][j + 1] = '.';
+                        maze[i + 1][j + 0] = '.';           
+                        break;
+                    case '-':
+                    case 'L':
+                        maze[i + 0][j + 1] = '-';
+                        maze[i + 1][j + 0] = '.';
+                        if (path.Contains(new(i / 2, j / 2)))
+                        {
+                            lp.Add(new(i, j + 1));
+                        }
+                        break;
+                    case '|':
+                    case '7':
+                        maze[i + 0][j + 1] = '.';
+                        maze[i + 1][j + 0] = '|';
+                        if (path.Contains(new(i / 2, j / 2)))
+                        {
+                            lp.Add(new(i + 1, j));
+                        }
+                        break;
+                    case 'F':
+                        maze[i + 0][j + 1] = '-';
+                        maze[i + 1][j + 0] = '|';
+                        if (path.Contains(new(i / 2, j / 2)))
+                        {
+                            lp.Add(new(i, j + 1));
+                            lp.Add(new(i + 1, j));
+                        }
+                        break;
+                }  
             }
-
-            return maze;
         }
 
+        // Flood Fill large maze
         Stack<(int,int)> stack = new();
         List<(int,int)> visited = [];
         stack.Push(new(0,0));
@@ -247,13 +120,7 @@ public static class Day10
             }
         }
 
-        static bool InBounds(int r,int c, int maxR, int maxC)
-        {
-            if (r < 0 || c < 0 || r >= maxR || c >= maxC)
-                return false;
-            return true;
-        }
-
+        // Mark the unvisited nodes with '1'
         for(int row = 0; row < maze.Length; row++){
             for(int col = 0; col < maze[0].Length; col++)
             {
@@ -264,6 +131,8 @@ public static class Day10
             }
         }
 
+        // Count all '1'. Note, we only count the top lefts of the 2x2 cells.
+        // This saves us from having to scale down again.
         int count = 0;
         for(int row = 0; row < inp.Length; row++){
             for(int col = 0; col < inp[0].Length; col++)
@@ -276,12 +145,9 @@ public static class Day10
             }
         }
 
-        // List<string> output = ConvertCharArrayToList(inp);
-        // foreach(string s in output)
-        // {
-        //     // Console.WriteLine(s.ToString());
-        // }
-        // System.IO.File.WriteAllLines("src/Day10/10.out", output);
+        // Write output.
+        List<string> output = ConvertCharArrayToList(inp);
+        File.WriteAllLines("src/Day10/10.out", output);
         Console.WriteLine(count);
         
     }
@@ -312,6 +178,13 @@ public static class Day10
         return res.ToArray();
     }
 
+    static bool InBounds(int r,int c, int maxR, int maxC)
+    {
+        if (r < 0 || c < 0 || r >= maxR || c >= maxC)
+            return false;
+        return true;
+    }
+
     static Coord GetRoot(string[] field)
     {  
         for(int row = 0; row < field.Length; row++){
@@ -325,6 +198,61 @@ public static class Day10
         }
         Console.WriteLine("FAIL");
         return new Coord(-1,-1);
+    }
+
+    static Coord GetStart(Coord root, string[] input)
+    {
+        for(int row = root.Row - 1; row <= root.Row + 1; row++)
+        {
+            if (row > -1 && row < input[0].Length)
+            {
+                for(int col = root.Col - 1; col <= root.Col + 1; col++)
+                {
+                    if (col > -1 && col < input.Length)
+                    {
+                        char cur = input[row][col];
+                        var (t1,t2) = Targets(new Coord(row, col), cur); 
+                        if ((t1.Row == root.Row && t1.Col == root.Col) ||
+                            (t2.Row == root.Row && t2.Col == root.Col))
+                            {
+                                // Console.WriteLine($"{cur}({row},{col}): {targets}");
+                                return new(row,col);
+                            }
+                    }
+                }
+            }
+        }
+        return new(-1,-1);
+    }
+
+    static List<Coord> GeneratePath(List<Coord> path, string[] input)
+    {
+        bool loop = false;
+        while(!loop)
+        {
+            Coord cc = path.Last();   
+            // Console.WriteLine(curCoord);
+            char cur = input[cc.Row][cc.Col];
+            if (cc == path.First())
+            {
+                loop = true;
+            }
+            var (t1, t2) = Targets(cc, cur);
+            // Console.WriteLine("cur: " + cc + " targets: " + (t1,t2) + " prev: " + path[path.Count-2]);
+            if (t1 == path[path.Count - 2])
+            {  
+                
+                path.Add(t2);
+                // curCoord = t2;
+            }
+            else
+            {
+                path.Add(t1);
+                // curCoord = t1;
+            }
+            // Console.WriteLine(path.Count);
+        }
+        return path;
     }
 
     static (Coord t1,Coord t2) Targets(Coord orig, char type)
@@ -368,7 +296,7 @@ public static class Day10
     
 }
 
-public record struct Coord(int Row, int Col)
+record struct Coord(int Row, int Col)
 {
     public int Row { get; } = Row;
     public int Col { get; } = Col;
