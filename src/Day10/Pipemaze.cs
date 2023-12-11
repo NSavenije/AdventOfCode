@@ -1,5 +1,6 @@
 #nullable disable
 
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Net.Security;
 
@@ -21,12 +22,16 @@ public static class Day10
         Coord curCoord = GetStart(root, input);
         List<Coord> path = GeneratePath([root,curCoord], input);
 
+
+        // var funcWatch = Stopwatch.StartNew();
         // Convert string[] to char[][]
         char[][] inp = new char[input.Length][];
         for(int row = 0; row < input.Length; row++){
             inp[row] = input[row].ToCharArray();
         }
+        // Console.WriteLine($"Convert string[] to char[][] = {funcWatch.ElapsedMilliseconds}ms");
 
+        // funcWatch = Stopwatch.StartNew();
         // Replace 'S' with actual symbol.
         var p1 = path[1];
         var pn = path[^3];
@@ -38,7 +43,9 @@ public static class Day10
                 inp[root.Row][root.Col] = c;
             }
         }
+        // Console.WriteLine($"Replace S = {funcWatch.ElapsedMilliseconds}ms");
         
+        // funcWatch = Stopwatch.StartNew();
         // Scale up maze
         List<Coord> lp = [];
         int rows = inp.Length;
@@ -97,14 +104,15 @@ public static class Day10
                 }  
             }
         }
-
+        // Console.WriteLine($"Scale up maze = {funcWatch.ElapsedMilliseconds}ms");
+        // funcWatch = Stopwatch.StartNew();
         // I've read somewhere that if I cross a path I am now in the maze.
         // If I count every 2nd row, There exist no strange symbols
         // If I'm in the maze, and the thing above me is  not on path, colour that one.
         // I won't be checking the scanrow anyways, no need to test. 
         for(int row = 1; row < maze.Length; row += 2){
             bool enclosed = false;
-            for(int col = 0; col < maze[0].Length; col++)
+            for(int col = 0; col < maze[0].Length; col += 2)
             {
                 if (lp.Contains(new(row,col)))
                 {
@@ -117,7 +125,8 @@ public static class Day10
                 }
             }
         }
-
+        // Console.WriteLine($"Find enclosed = {funcWatch.ElapsedMilliseconds}ms");
+        // funcWatch = Stopwatch.StartNew();
         // Count all '1'. Note, we only count the top lefts of the 2x2 cells.
         // This saves us from having to scale down again.
         int count = 0;
@@ -132,10 +141,14 @@ public static class Day10
             }
         }
 
+        // Console.WriteLine($"Count 1's = {funcWatch.ElapsedMilliseconds}ms");
+
+        // funcWatch = Stopwatch.StartNew();
         // Write output.
         List<string> output = ConvertCharArrayToList(maze);
         File.WriteAllLines("src/Day10/10.out", output);
         Console.WriteLine(count);
+        // Console.WriteLine($"Write output = {funcWatch.ElapsedMilliseconds}ms");
         
     }
 
