@@ -13,7 +13,7 @@ public static class Day9
     {
         List<List<int>> histories = ParseInput();
         List<int> results = ExtrapolateValues(histories, forward: false);
-        Console.WriteLine(string.Join(',',results));
+        // Console.WriteLine(string.Join(',',results));
         Console.WriteLine(results.Sum());
     }
     static List<List<int>> ParseInput()

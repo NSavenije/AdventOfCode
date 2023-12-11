@@ -226,49 +226,33 @@ public static class Day10
             return maze;
         }
 
-        bool progress = true;
-        while(progress){
-            progress = false;
-            for(int row = 0; row < maze.Length; row++){
-                for(int col = 0; col < maze[0].Length; col++)
+        Stack<(int,int)> stack = new();
+        List<(int,int)> visited = [];
+        stack.Push(new(0,0));
+        
+        while (stack.Count > 0)
+        {
+            (int r, int c) = stack.Pop();
+            if (!visited.Contains((r,c)))
+            {
+                visited.Add((r,c));
+                if (InBounds(r,c, maze.Length, maze[0].Length) && (!lp.Contains(new (r,c))))
                 {
-                    if (lp.Contains(new (row,col)))
-                    {
-                        // Console.WriteLine($"({row},{col}) ({maze[row][col]}) lies on Path");
-                    }
-                    else
-                    {
-                        // If @edge
-                        if (row == 0 || col == 0 || row == maze.Length - 1 || col == maze[0].Length -1)
-                        {
-                            if (maze[row][col] != '0') progress = true;
-                            maze[row][col] = '0';
-                        }
-                        // If bordering other 0
-                        int counter = -1;
-                        for(int r = row - 1; r <= row + 1; r++)
-                        {
-                            for(int c = col - 1; c <= col + 1; c++)
-                            {
-                                counter++;
-                                if (r < 0 || c < 0 || r > maze.Length - 1 || c > maze[0].Length -1)
-                                {
-                                    continue;
-                                }
-                                if (maze[r][c] == '0')
-                                {
-                                    if (maze[row][col] != '0') progress = true;
-                                    maze[row][col] = '0';
-                                    // break;
-                                }
-                            }
-                        }
-                    }
+                    maze[r][c] = '0';
+                    stack.Push((r,c-1));
+                    stack.Push((r,c+1));
+                    stack.Push((r-1,c));
+                    stack.Push((r+1,c));
                 }
             }
         }
-        
 
+        static bool InBounds(int r,int c, int maxR, int maxC)
+        {
+            if (r < 0 || c < 0 || r >= maxR || c >= maxC)
+                return false;
+            return true;
+        }
 
         for(int row = 0; row < maze.Length; row++){
             for(int col = 0; col < maze[0].Length; col++)
@@ -297,14 +281,9 @@ public static class Day10
         // {
         //     // Console.WriteLine(s.ToString());
         // }
-        // System.IO.File.WriteAllLines("10.out", output);
+        // System.IO.File.WriteAllLines("src/Day10/10.out", output);
         Console.WriteLine(count);
         
-    }
-
-    private static char[][] DoubleSizeOfCharArray(char[][] inp, out List<Coord> lp)
-    {
-        throw new NotImplementedException();
     }
 
     static List<string> ConvertCharArrayToList(char[][] charArray)
