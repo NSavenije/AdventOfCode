@@ -1,112 +1,74 @@
-using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Security;
 #nullable disable
-public static class Day12
-{
-    public static void Solve1()
-    {
-        List<string> input = File.ReadAllLines("src/Day12/12.in").ToList();
-        long sum = 0;
 
-        
+public static class Day12 
+{
+    public static void Solve1() 
+    {
+        // var funcWatch = Stopwatch.StartNew();
+        Console.WriteLine(ParseInput("src/Day12/12.in", 1));
+        // Console.WriteLine(funcWatch.ElapsedMilliseconds + "ms");
+    }
+    public static void Solve2()
+    {
+        Console.WriteLine(ParseInput("src/Day12/12.in", 5));
+    }
+
+    static long ParseInput(string filePath, int repeat) 
+    {
+        long sum = 0;
+        List<string> input = File.ReadAllLines(filePath).ToList();
         foreach(string s in input)
         {
             string records = s.Split(' ')[0];
-            int[] groups = s.Split(' ')[1].Trim().Split(',').Select(int.Parse).ToArray();            
-            sum += Solve(records, groups, []);
-        }
-        // sum += CountPermutations(input[0]);
-        Console.WriteLine(sum);
-    }
-
-    public static void Solve2()
-    {
-        List<string> input = File.ReadAllLines("src/Day12/12.in").ToList();
-        long sum = 0;
-
-        Parallel.For(0, input.Count, i => 
-        {
-            string s = input[i];
-            string records = s.Split(' ')[0];
-            records = string.Join('?',Enumerable.Repeat(records, 5));
+            records = string.Join('?',Enumerable.Repeat(records, repeat));
             
             string grps = s.Split(' ')[1].Trim();
-            int[] groups = string.Join(',',Enumerable.Repeat(grps, 5)).Split(',').Select(int.Parse).ToArray();
+            int[] groups = string.Join(',',Enumerable.Repeat(grps, repeat)).Split(',').Select(int.Parse).ToArray();
             
             var funcWatch = Stopwatch.StartNew();
-            long res = Solve(records, groups, []);
+            long res = Solve(records, 0, groups, []);
             sum += res;
-            Console.WriteLine("sum: " + sum + ", res: " + res + " | " + records + " " + string.Join(',',groups));
-        });
-
-        Console.WriteLine(sum);
-    }
-
-    static long Solve(string s, int[] groups, Dictionary<(string, int[]), long> cache)
-    {
-        if(!cache.ContainsKey((s, groups)))
-        {
-            long res = Compute(s, groups, cache);
-            // Console.WriteLine($"CacheHit: {s}|{string.Join(',',groups)}: {res}");
-            cache.Add((s,groups), res);
+            // Console.WriteLine("sum: " + sum + ", res: " + res + ", " + funcWatch.ElapsedMilliseconds + "ms : " + records + " " + string.Join(',',groups));
         }
-        // Console.WriteLine($"CacheHit: {s}|{string.Join(',',groups)}: {perms}");
-        return cache[(s,groups)];
+        return sum;
     }
 
-    static long Compute(string s, int[] groups, Dictionary<(string,int[]),long> cache)
-    {
-        // Solve for empty
+    static long Solve(string pattern, int i, int[] groups, Dictionary<(string,int[], int),long> cache) {
+        if (!cache.ContainsKey((pattern, groups, i))) {
+            cache[(pattern, groups, i)] = Compute(pattern, i, groups, cache);
+        }
+        return cache[(pattern, groups, i)];
+    }
+
+    static long Compute(string s, int i, int[] groups, Dictionary<(string,int[], int),long> cache) {
         if (s == "")
+            return groups.Length - i == 0 ? 1 : 0;
+        else if(s[0] == '.')
+            return Solve(s[1..], i, groups, cache);
+        else if(s[0] == '?')
+            return Solve("." + s[1..], i, groups, cache) + Solve("#" + s[1..], i, groups, cache);
+        else if(s[0] == '#')
         {
-            int result = groups.Length == 0 ? 1 : 0;
-            return result;
-        }
-        else if (s[0] == '.')
-        {
-            return Solve(s[1..], groups, cache);
-        }
-        else if (s[0] == '#')
-        {
-            if (groups.Length == 0)
-            {
+            if (groups.Length - i == 0)
                 return 0;
-            }
-            int group = groups[0];
-            int[] groupsTail = groups.SubArray(1, groups.Length - 1);
-            int maxPossibleGroupSize = s.TakeWhile(s => s == '#' || s == '?').Count();
-            if (maxPossibleGroupSize < group)
-            {   
-                return 0;
-            }
-            if (s.Length == group)
-            {
-                return Solve("", groupsTail, cache);
-            }
-            if (s[group] == '#')
-            {
-                return 0;
-            }
-            return Solve(s[(group + 1)..], groupsTail, cache);
+
+            int group = groups[i];
+            int maxPossibleGroupSize = s.TakeWhile(c => c == '#' || c == '?').Count();
+
+            if (maxPossibleGroupSize < group) {
+                return 0; 
+            } else if (s.Length == group) {
+                return Solve("", i + 1, groups, cache);
+            } else if (s[group] == '#') {
+                return 0; 
+            } else {
+                return Solve(s[(group + 1)..], i + 1, groups, cache);
+            }   
         }
-        else if (s[0] == '?')
+        else 
         {
-            return Solve('#' + s[1..], groups, cache) + Solve('.' + s[1..], groups, cache);
-        }
-        else
-        {
-            Console.WriteLine("NOT POSSIBLE");
             return long.MaxValue;
         }
     }
-
-    static T[] SubArray<T>(this T[] data, int index, int length)
-    {
-        if (length < 0)
-            return [];
-        T[] result = new T[length];
-        Array.Copy(data, index, result, 0, length);
-        return result;
-    }   
 }
