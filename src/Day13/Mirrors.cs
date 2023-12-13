@@ -40,29 +40,16 @@ public static class Day13
         return !smudge || smudges == 1;
     }
     
+    static List<string> Transpose(List<string> rows) =>
+        Enumerable.Range(0,rows[0].Length).Select(i => string.Concat(rows.Select(row => row[i]))).ToList();
 
-    static List<string> Transpose(List<string> rows)
-    {
-        List<string> result = [];
-
-        for (int columnIndex = 0; columnIndex < rows[0].Length; columnIndex++)
-            result.Add(string.Concat(rows.Select(row => row[columnIndex])));
-        return result;
-    }
-
-    static List<List<string>> ParseInput(string filePath)
-    {
-        StreamReader sr = new(filePath);
-        List<List<string>> input = [];
-        input.Add([]);
-        string? line;
-        while ((line = sr.ReadLine()) != null)
+    static List<List<string>> ParseInput(string filePath) =>
+        File.ReadAllLines(filePath).Aggregate(new List<List<string>> { new() }, (acc, s) =>
         {
-            if(line == "")
-                input.Add([]);
-            else
-                input[^1].Add(line);
-        }
-        return input;
-    }
+            if (s == "") 
+                acc.Add([]);
+            else 
+                acc.Last().Add(s);
+            return acc;
+        });
 }
