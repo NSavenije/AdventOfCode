@@ -62,15 +62,11 @@ public static class Day13
         }
         // Move Mirror to first index
         mirrorIndex--;
-        // Check left
         if (ss.Count - 1 > mirrorIndex * 2)
         {
             for(int i = 0; i < mirrorIndex; i++)
             {
-                // 0123456 // mi 4 - 4 items - rightIndex should be 6789
-                int rightIndex = 2 * mirrorIndex + 1;
-                // Console.WriteLine($"mi {mirrorIndex} i {i} ri {rightIndex - i} - {ss.Count}");
-                smudges += CompareString(ss[i], ss[rightIndex - i]);
+                smudges += CompareString(ss[i], ss[2 * mirrorIndex + 1 - i]);
                 if (smudges > (smudge ? 1 : 0))
                     return false;
             }
@@ -79,14 +75,12 @@ public static class Day13
         {  
             for(int i = ss.Count - 1; i > mirrorIndex + 1; i--)
             {
-                int leftIndex = ss.Count - 1 - (mirrorIndex + 1);
-                // Console.WriteLine($"mi {mirrorIndex} i {i} li {mirrorIndex - leftIndex + (ss.Count - 1 - i)} - {ss.Count}");
-                smudges += CompareString(ss[i], ss[mirrorIndex - leftIndex + (ss.Count - 1 - i)]);
+                smudges += CompareString(ss[i], ss[2 * mirrorIndex + 1 - i]);
                 if (smudges > (smudge ? 1 : 0))
                     return false;
             }
         }
-            return !smudge || smudges == 1;
+        return !smudge || smudges == 1;
     }
     
 
