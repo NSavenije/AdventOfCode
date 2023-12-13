@@ -57,28 +57,15 @@ public static class Day13
         // Console.WriteLine(string.Join('\n', ss));
         int smudges = CompareString(ss[mirrorIndex - 1], ss[mirrorIndex]);
         if (smudge && smudges > 1)
-        {
             return false;
-        }
+
         // Move Mirror to first index
         mirrorIndex--;
-        if (ss.Count - 1 > mirrorIndex * 2)
+        for(int i = Math.Max(0, 2 * mirrorIndex - ss.Count + 2); i < mirrorIndex; i++)
         {
-            for(int i = 0; i < mirrorIndex; i++)
-            {
-                smudges += CompareString(ss[i], ss[2 * mirrorIndex + 1 - i]);
-                if (smudges > (smudge ? 1 : 0))
-                    return false;
-            }
-        }
-        else
-        {  
-            for(int i = ss.Count - 1; i > mirrorIndex + 1; i--)
-            {
-                smudges += CompareString(ss[i], ss[2 * mirrorIndex + 1 - i]);
-                if (smudges > (smudge ? 1 : 0))
-                    return false;
-            }
+            smudges += CompareString(ss[i], ss[2 * mirrorIndex + 1 - i]);
+            if (smudges > (smudge ? 1 : 0))
+                return false;
         }
         return !smudge || smudges == 1;
     }
@@ -89,35 +76,22 @@ public static class Day13
         List<string> result = [];
 
         for (int columnIndex = 0; columnIndex < rows[0].Length; columnIndex++)
-        {
-            StringBuilder columnBuilder = new();
-            for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
-            {
-                columnBuilder.Append(rows[rowIndex][columnIndex]);
-            }
-            result.Add(columnBuilder.ToString());
-        }
+            result.Add(string.Concat(rows.Select(row => row[columnIndex])));
         return result;
     }
 
     static List<List<string>> ParseInput(string filePath)
     {
-        StreamReader sr = new StreamReader(filePath);
+        StreamReader sr = new(filePath);
         List<List<string>> input = [];
         input.Add([]);
-        int index = 0;
         string line;
         while ((line = sr.ReadLine()) != null)
         {
             if(line == "")
-            {
-                index++;
                 input.Add([]);
-            }
             else
-            {
-                input[index].Add(line);
-            }
+                input[^1].Add(line);
         }
         return input;
     }
