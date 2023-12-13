@@ -28,91 +28,31 @@ public static class Day13
     static long FindMirrorValues(List<string> input, bool smudge)
     {
         long result = 0;
-        if (!smudge)
+
+        for(int i = 1; i < input.Count; i++)
         {
-            for(int i = 1; i < input.Count; i++)
+            if(CompareString(input[i], input[i-1]) <= (smudge ? 1 : 0) && TestMirror(input, i, smudge))
             {
-                if(input[i - 1] == input[i] && TestMirror(input, i, smudge))
-                {
-                    result += i * 100;
-                    break;
-                }
-            }
-            input = Transpose(input);
-            for(int i = 1; i < input.Count; i++)
-            {
-                if(input[i - 1] == input[i] && TestMirror(input, i, smudge))
-                {
-                    result += i ;
-                    break;
-                }
+                result += i * 100;
+                break;
             }
         }
-        else
+        input = Transpose(input);
+        for(int i = 1; i < input.Count; i++)
         {
-            for(int i = 1; i < input.Count; i++)
+            if(CompareString(input[i], input[i-1]) <= (smudge ? 1 : 0) && TestMirror(input, i, smudge))
             {
-                if(CompareString(input[i], input[i-1]) < 2 && TestMirror2(input, i, smudge))
-                {
-                    result += i * 100;
-                    break;
-                }
-            }
-            input = Transpose(input);
-            for(int i = 1; i < input.Count; i++)
-            {
-                if(CompareString(input[i], input[i-1]) < 2 && TestMirror2(input, i, smudge))
-                {
-                    result += i ;
-                    break;
-                }
+                result += i;
+                break;
             }
         }
         return result;
     }
 
-    static int CompareString(string a, string b)
-    {
-        return a.Zip(b, (x, y) => x == y).Count(z => !z);
-    }
+    static int CompareString(string a, string b) =>
+        a.Zip(b, (x, y) => x == y).Count(z => !z);
 
     static bool TestMirror(List<string> ss, int mirrorIndex, bool smudge)
-    {
-        // Console.WriteLine(string.Join('\n', ss));
-        
-        mirrorIndex--;
-        // Check left
-        if (ss.Count - 1 > mirrorIndex * 2)
-        {
-            for(int i = 0; i < mirrorIndex; i++)
-            {
-                // 0123456 // mi 4 - 4 items - rightIndex should be 6789
-                int rightIndex = 2 * mirrorIndex + 1;
-                // Console.WriteLine($"mi {mirrorIndex} i {i} ri {rightIndex - i} - {ss.Count}");
-                if (ss[i] != ss[rightIndex - i])
-                {
-                    return false;
-                }
-            }
-        }
-        else
-        {  //01234567
-            for(int i = ss.Count - 1; i > mirrorIndex + 1; i--)
-            {
-                //0123456 - 3 65 == 12
-                // 01234567 - count 8 - 2 iteration only 6 and 7 -> 8
-                int leftIndex = ss.Count - 1 - (mirrorIndex + 1); // 7 - 4 - 1 = check 2 indices
-                // Console.WriteLine($"mi {mirrorIndex} i {i} li {mirrorIndex - leftIndex + (ss.Count - 1 - i)} - {ss.Count}");
-                if (ss[i] != ss[mirrorIndex - leftIndex + (ss.Count - 1 - i)])
-                {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    static bool TestMirror2(List<string> ss, int mirrorIndex, bool smudge)
     {
         // Console.WriteLine(string.Join('\n', ss));
         int smudges = CompareString(ss[mirrorIndex - 1], ss[mirrorIndex]);
@@ -120,6 +60,7 @@ public static class Day13
         {
             return false;
         }
+        // Move Mirror to first index
         mirrorIndex--;
         // Check left
         if (ss.Count - 1 > mirrorIndex * 2)
@@ -130,28 +71,22 @@ public static class Day13
                 int rightIndex = 2 * mirrorIndex + 1;
                 // Console.WriteLine($"mi {mirrorIndex} i {i} ri {rightIndex - i} - {ss.Count}");
                 smudges += CompareString(ss[i], ss[rightIndex - i]);
-                if (smudge && smudges > 1)
-                {
+                if (smudges > (smudge ? 1 : 0))
                     return false;
-                }
             }
         }
         else
-        {  //01234567
+        {  
             for(int i = ss.Count - 1; i > mirrorIndex + 1; i--)
             {
-                //0123456 - 3 65 == 12
-                // 01234567 - count 8 - 2 iteration only 6 and 7 -> 8
-                int leftIndex = ss.Count - 1 - (mirrorIndex + 1); // 7 - 4 - 1 = check 2 indices
+                int leftIndex = ss.Count - 1 - (mirrorIndex + 1);
                 // Console.WriteLine($"mi {mirrorIndex} i {i} li {mirrorIndex - leftIndex + (ss.Count - 1 - i)} - {ss.Count}");
                 smudges += CompareString(ss[i], ss[mirrorIndex - leftIndex + (ss.Count - 1 - i)]);
-                if (smudge && smudges > 1)
-                {
+                if (smudges > (smudge ? 1 : 0))
                     return false;
-                }
             }
         }
-        return smudges == 1 ? true : false;
+            return !smudge || smudges == 1;
     }
     
 
