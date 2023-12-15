@@ -16,51 +16,10 @@ public static class Day11
 
     static void Solve(int expansion = 2)
     {
-        using StreamReader sr = new("src/Day11/11.in");
-        string line;
-
-        List<string> input = [];
-        int counter = 0;
-        List<int> rows = [];
-        List<int> cols = [];
-        while ((line = sr.ReadLine()) != null)
-        {
-            input.Add(line);
-            if (line.All(c => c == '.'))
-                rows.Add(counter);
-            counter++;
-        }
-        List<string> transposed = TransposeRowsToColumns(input);
-        List<string> result = [];
-        counter = 0;
-
-        foreach(string s in transposed)
-        {
-            result.Add(s);
-            if (s.All(c => c == '.'))
-                cols.Add(counter);
-            counter++;
-        }
-        result = TransposeRowsToColumns(result);
-
-
-        // System.IO.File.WriteAllLines("11.out", result);
-        int[,] universe = new int[result[0].Length,result.Count];
-        counter = 0;
-        List<(int x,int y)> galaxies = [];
-        for(int x = 0; x < universe.GetLength(0); x++)
-        {
-            for(int y = 0; y < universe.GetLength(1); y++)
-            {
-                if (result[y][x] == '#')
-                {
-                    galaxies.Add((x, y));
-                    universe[x,y] = counter++;
-                }
-                else
-                    universe[x,y] = result[y][x];
-            }
-        }
+        List<string> input = File.ReadAllLines("src/Day11/11.in").ToList();
+        List<int> rows = FindEmptyRows(input);
+        List<int> cols = FindEmptyRows(Transpose(input));
+        List<(int r,int c)> galaxies = FindGalaxies(input);
 
         long sum = 0;
         foreach((int x1,int y1) in galaxies)
@@ -70,54 +29,35 @@ public static class Day11
                 if (x2 < x1 || ( x2 == x1 && y2 <= y1))
                     continue;
 
-                int xBig, xSmall, yBig, ySmall;
-                if (x1 >= x2)
-                {
-                    xBig = x1; xSmall = x2;
-                }
-                else{
-                    xBig = x2; xSmall = x1;
-                }
-                if (y1 >= y2)
-                {
-                    yBig = y1; ySmall = y2;
-                }
-                else{
-                    yBig = y2; ySmall = y1;
-                }
-                int dist = 0;
-                for(int x = xSmall + 1; x < xBig; x++)
-                {
-                    if (cols.Contains(x))
-                        dist += expansion - 1;
-                }
-                for(int y = ySmall + 1; y < yBig; y++)
-                {
-                    if (rows.Contains(y))
-                        dist += expansion - 1;
-                }
-                var xs = Enumerable.Range(x1,x2).Intersect(cols).Count() * (expansion - 1);
-                var ys = Enumerable.Range(y1,y2).Intersect(rows).Count() * (expansion - 1);
-                dist += Math.Abs(x2 - x1) + Math.Abs(y2 - y1);
+                int xs = Enumerable.Range(x1, x2 - x1).Intersect(rows).Count() * (expansion - 1);
+                int low = Math.Min(y1, y2); 
+                int high = Math.Max(y1, y2);
+                int ys = Enumerable.Range(low, high - low).Intersect(cols).Count() * (expansion - 1);
+                int dist = Math.Abs(x2 - x1) + Math.Abs(y2 - y1) + xs + ys;
                 sum += dist;
+                // Console.WriteLine($"({x1},{y1})-({x2},{y2}): {dist}({Math.Abs(x2 - x1)},{Math.Abs(y2 - y1)},{xs},{ys})");
             }
         }
         Console.WriteLine(sum);
     }
 
-    static List<string> TransposeRowsToColumns(List<string> rows)
-    {
-        List<string> result = [];
+    static List<string> Transpose(List<string> rows) =>
+        Enumerable.Range(0,rows[0].Length).Select(i => string.Concat(rows.Select(row => row[i]))).ToList();
 
-        for (int columnIndex = 0; columnIndex < rows[0].Length; columnIndex++)
+    static List<int> FindEmptyRows(List<string> input)
+    {
+        List<int> rows = [];
+        for(int i = 0; i < input.Count; i++)
         {
-            StringBuilder columnBuilder = new();
-            for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
-            {
-                columnBuilder.Append(rows[rowIndex][columnIndex]);
-            }
-            result.Add(columnBuilder.ToString());
+            if (input[i].All(c => c == '.'))
+                rows.Add(i);   
         }
-        return result;
+        return rows;
     }
+    
+    static List<(int, int)> FindGalaxies(List<string> input) =>
+        input.SelectMany((s, row) => s.AllIndexesOf('#').Select(col => (row, col))).ToList();
+
+    public static List<int> AllIndexesOf(this string str, char value) =>
+        Enumerable.Range(0, str.Length).Where(i => str[i] == value).ToList();
 }
