@@ -46,13 +46,14 @@ public static class Day14
         // # Eventually they will both be inside the cycle and then,
         // # at some point, the distance between them will be
         // # divisible by the period λ.
-        var tortoise = x0.Head.Next; // # f(x0) is the element/node next to x0.
-        var hare = tortoise.Next;
+        var tortoise = x0.First.Next ?? x0.First; // # f(x0) is the element/node next to x0.
+        var hare = tortoise.Next ?? x0.First;
         while (tortoise != hare)
         {
-            tortoise = tortoise.Next;
-            hare = hare.Next.Next;
+            tortoise = tortoise.Next ?? x0.First;
+            hare = hare.Next.Next ?? x0.First;
         }
+
     
         // # At this point the tortoise position, ν, which is also equal
         // # to the distance between hare and tortoise, is divisible by
@@ -64,11 +65,11 @@ public static class Day14
 
         // # Find the position μ of first repetition.    
         int mu = 0;
-        tortoise = x0.Head;
+        tortoise = x0.First;
         while (tortoise != hare)
         {
-            tortoise = tortoise.Next;
-            hare = hare.Next;  // # Hare and tortoise move at same speed
+            tortoise = tortoise.Next ?? x0.First;
+            hare = hare.Next ?? x0.First;  // # Hare and tortoise move at same speed
             mu += 1;
         }
     
@@ -76,9 +77,9 @@ public static class Day14
         // # The hare moves one step at a time while tortoise is still.
         // # lam is incremented until λ is found.
         int lam = 1;
-        hare = tortoise.Next;
+        hare = tortoise.Next ?? x0.First;
         while (tortoise != hare){
-            hare = hare.Next;
+            hare = hare.Next ?? x0.First;
             lam += 1;
         }
 
@@ -253,49 +254,4 @@ public static class Day14
     }
 }
 
-public class Node<T>
-{
-    public T Data { get; set; }
-    public Node<T> Next { get; set; }
-
-    public Node(T data)
-    {
-        Data = data;
-        Next = null;
-    }
-}
-
-public class LinkedList<T>
-{
-    public Node<T> Head { get; private set; }
-    public int Count { get; private set; }
-
-    public LinkedList()
-    {
-        Head = null;
-        Count = 0;
-    }
-
-    public void AddLast(T data)
-    {
-        Count++;
-        Node<T> newNode = new Node<T>(data);
-
-        if (Head == null)
-        {
-            Head = newNode;
-            Head.Next = Head; 
-        }
-        else
-        {
-            Node<T> current = Head;
-            while (current.Next != Head) 
-            {
-                current = current.Next;
-            }
-            current.Next = newNode;
-            newNode.Next = Head; 
-        }
-    }
-}
 
