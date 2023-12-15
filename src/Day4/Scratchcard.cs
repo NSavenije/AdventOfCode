@@ -53,19 +53,9 @@ static class Day4
 
     static List<int> ExtractNumbers(string input)
     {
-        List<int> nums = new();
-        
         Regex regex = new Regex(@"\d+");
         MatchCollection matches = regex.Matches(input);
         
-        foreach (Match match in matches)
-        {
-            if (int.TryParse(match.Value, out int number))
-            {
-                nums.Add(number);
-            }
-        }
-
-        return nums;
+        return matches.Select(m => int.Parse(m.Value)).ToList();
     }
 }

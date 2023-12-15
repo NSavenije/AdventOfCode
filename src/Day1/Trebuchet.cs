@@ -1,14 +1,10 @@
 #nullable disable
 
 static class Day1 {
-    public static void Solve1()
-    {
+    public static void Solve1() =>
         ParseInput(false);
-    }
-    public static void Solve2()
-    {
+    public static void Solve2() =>
         ParseInput(true);
-    }
 
     static void ParseInput(bool numbersAsText)
     {
