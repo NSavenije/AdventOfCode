@@ -14,7 +14,7 @@ public static class Day15
             if ((char)c == ',')
             {
                 total += hash;  
-                Console.WriteLine(hash);
+                // Console.WriteLine(hash);
                 hash = 0;
                 continue;
             }
@@ -36,11 +36,18 @@ public static class Day15
         for(int i = 0; i < inputs.Length; i++)
         {
             byte c = inputs[i];
+            if ((char)c == ',')
+            {
+                hash = 0;
+                continue;
+            }
+            if ((char)c != '-' && (char)c != '=')
+                hash = (byte)((byte)((hash + c) * 17) % 256);
             // Remove
             if ((char)c == '-')
             {
                 // Find my label, remove, move everything else forwards
-                hash = GetHash(inputs[i - 2], inputs[i - 1]);
+                // hash = GetHash(inputs[i - 2], inputs[i - 1]);
                 
                 var box = boxes[hash];
                 string label = (char)inputs[i - 2] + "" + (char)inputs[i - 1];
@@ -57,7 +64,7 @@ public static class Day15
             else if ((char)c == '=')
             {
                 // Find my label, remove, move everything else forwards
-                hash = GetHash(inputs[i - 2], inputs[i - 1]);
+                // hash = GetHash(inputs[i - 2], inputs[i - 1]);
                 var box = boxes[hash];
                 string label = (char)inputs[i - 2] + "" + (char)inputs[i - 1];
                 bool added = false;
@@ -84,7 +91,7 @@ public static class Day15
             {
                 long add = box[j].pow * (j + 1) * (i + 1) ;
                 total += add;
-                // Console.WriteLine($"box {i}:{box[j].lab},{box[j].pow},{j + 1} ADD {add}");
+                Console.WriteLine($"box {i}:{box[j].lab},{box[j].pow},{j + 1} ADD {add}");
             }
         }
         Console.WriteLine(total);
@@ -100,7 +107,7 @@ public static class Day15
 
     static byte[] ParseInput()
     {
-        string filePath = "src/Day15/15b.in";
+        string filePath = "src/Day15/15.in";
         byte[] input = File.ReadAllBytes(filePath);
         return input;
     }
