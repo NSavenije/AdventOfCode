@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 public static class Day15
 {
     public static void Solve1()
@@ -28,29 +26,29 @@ public static class Day15
     {
         byte[] inputs = ParseInput();
         byte hash = 0;
+        string label = "";
         List<(string lab, int pow)>[] boxes = new List<(string, int)>[256];
-        for(int i = 0; i < 256; i++)
-        {
-            boxes[i] = [];
-        }
+        for(int i = 0; i < 256; i++) { boxes[i] = []; }
         for(int i = 0; i < inputs.Length; i++)
         {
             byte c = inputs[i];
             if ((char)c == ',')
             {
                 hash = 0;
+                label = "";
                 continue;
             }
             if ((char)c != '-' && (char)c != '=')
+            {
                 hash = (byte)((byte)((hash + c) * 17) % 256);
+                label += (char)c;
+            }
+                
             // Remove
             if ((char)c == '-')
             {
                 // Find my label, remove, move everything else forwards
-                // hash = GetHash(inputs[i - 2], inputs[i - 1]);
-                
                 var box = boxes[hash];
-                string label = (char)inputs[i - 2] + "" + (char)inputs[i - 1];
                 for(int j = 0; j < box.Count; j++)
                 {
                     var lens = box[j];
@@ -64,9 +62,7 @@ public static class Day15
             else if ((char)c == '=')
             {
                 // Find my label, remove, move everything else forwards
-                // hash = GetHash(inputs[i - 2], inputs[i - 1]);
                 var box = boxes[hash];
-                string label = (char)inputs[i - 2] + "" + (char)inputs[i - 1];
                 bool added = false;
                 for(int j = 0; j < box.Count; j++)
                 {
@@ -91,24 +87,12 @@ public static class Day15
             {
                 long add = box[j].pow * (j + 1) * (i + 1) ;
                 total += add;
-                Console.WriteLine($"box {i}:{box[j].lab},{box[j].pow},{j + 1} ADD {add}");
+                // Console.WriteLine($"box {i}:{box[j].lab},{box[j].pow},{j + 1} ADD {add}");
             }
         }
         Console.WriteLine(total);
     }
 
-    static byte GetHash(byte fst, byte snd)
-    {
-        byte hash = 0;
-        hash = (byte)((byte)((hash + fst) * 17) % 256);
-        hash = (byte)((byte)((hash + snd) * 17) % 256);
-        return hash;
-    }
-
-    static byte[] ParseInput()
-    {
-        string filePath = "src/Day15/15.in";
-        byte[] input = File.ReadAllBytes(filePath);
-        return input;
-    }
+    static byte[] ParseInput() =>
+        File.ReadAllBytes("src/Day15/15.in");
 }
