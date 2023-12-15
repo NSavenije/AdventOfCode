@@ -1,6 +1,5 @@
 #nullable disable
 
-using System.Diagnostics.SymbolStore;
 using System.Text;
 
 public static class Day14
@@ -29,8 +28,6 @@ public static class Day14
         }
 
         (int tortoise, int hare) = Floyd(hashes);
-        
-        // FLoyd's tortoise and hare without a linked list improv...
         
         int length = hare - tortoise;
         int offset = (1_000_000_000 - hare) % length - 1;
