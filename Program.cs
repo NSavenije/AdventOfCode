@@ -41,7 +41,9 @@ class Program
             Console.WriteLine($"Running Day {day}-{part}");
             Type classType = Type.GetType($"Day{day}");
             MethodInfo method = classType.GetMethod($"Solve{part}");
+            var funcWatch = System.Diagnostics.Stopwatch.StartNew();
             method.Invoke(null, null); 
+            Console.WriteLine($"Run time = {funcWatch.ElapsedMilliseconds}ms \n");
         }
     }
 }

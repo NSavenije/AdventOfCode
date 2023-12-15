@@ -1,3 +1,6 @@
+using System.Collections.Specialized;
+#nullable disable
+
 public static class Day15
 {
     public static void Solve1()
@@ -27,67 +30,41 @@ public static class Day15
         byte[] inputs = ParseInput();
         byte hash = 0;
         string label = "";
-        List<(string lab, int pow)>[] boxes = new List<(string, int)>[256];
+        OrderedDictionary[] boxes = new OrderedDictionary[256];
         for(int i = 0; i < 256; i++) { boxes[i] = []; }
         for(int i = 0; i < inputs.Length; i++)
         {
             byte c = inputs[i];
-            if ((char)c == ',')
+            switch ((char)c)
             {
-                hash = 0;
-                label = "";
-                continue;
-            }
-            if ((char)c != '-' && (char)c != '=')
-            {
-                hash = (byte)((byte)((hash + c) * 17) % 256);
-                label += (char)c;
-            }
-                
-            // Remove
-            if ((char)c == '-')
-            {
-                // Find my label, remove, move everything else forwards
-                var box = boxes[hash];
-                for(int j = 0; j < box.Count; j++)
-                {
-                    var lens = box[j];
-                    if (label == lens.lab)
-                    {
-                        box.Remove(lens);
-                        break;
-                    }
-                }
-            }
-            else if ((char)c == '=')
-            {
-                // Find my label, remove, move everything else forwards
-                var box = boxes[hash];
-                bool added = false;
-                for(int j = 0; j < box.Count; j++)
-                {
-                    var (lab, _) = box[j];
-                    if (label == lab)
-                    {
-                        box[j] = (label,(char)inputs[i + 1] - 48);
-                        added = true;
-                        break;
-                    }
-                }
-                if (!added)
-                    box.Add((label, (char)inputs[i + 1] - 48));
+                case ',': // next lens
+                    hash = 0;
+                    label = "";
+                    break;
+                case '-': // remove
+                    boxes[hash].Remove(label);
+                    break;
+                case '=': // add
+                    if (boxes[hash].Contains(label))
+                        boxes[hash][label] = (char)inputs[i + 1] - 48;  
+                    else
+                        boxes[hash].Add(label, (char)inputs[i + 1] - 48);   
+                    break;
+                default: // get hash
+                    hash = (byte)((byte)((hash + c) * 17) % 256);
+                    label += (char)c;
+                    break;
             }
         }
 
         long total = 0;
         for (int i = 0; i < 256; i++)
         {
-            var box = boxes[i];
-            for (int j = 0; j < box.Count; j++)
+            OrderedDictionary box = boxes[i];
+            for(int j = 0; j < box.Count; j++)
             {
-                long add = box[j].pow * (j + 1) * (i + 1) ;
+                int add = (i + 1) * (j + 1) * (int)box[j];
                 total += add;
-                // Console.WriteLine($"box {i}:{box[j].lab},{box[j].pow},{j + 1} ADD {add}");
             }
         }
         Console.WriteLine(total);
