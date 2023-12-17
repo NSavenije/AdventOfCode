@@ -7,7 +7,7 @@ class Program
     {
         int day = 1;
         int part = 1;
-        int currentDay = 16;
+        int currentDay = 17;
         if (args.Length == 1 && args[0] == "A")
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();

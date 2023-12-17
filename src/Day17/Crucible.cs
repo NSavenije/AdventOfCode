@@ -21,16 +21,15 @@ public static class Day17
         (int x,int y)[] dirs = [(1,0),(0,1),(-1,0),(0,-1)];
         int xs = graph.GetLength(0), ys = graph.GetLength(1);
         int[,,] dists = InitDists(xs, ys);
-        Queue<Node> queue = new();
-        List<int> outputs = [];
-        queue.Enqueue(new Node(0,0,0,[0,1]));
+        PriorityQueue<Node,int> queue = new();
+        queue.Enqueue(new Node(0,0,0,[0,1]),0);
         while (queue.Count > 0)
         {
             Node node = queue.Dequeue();
 
             // Last node reached!
             if (node.X == xs - 1 && node.Y == ys - 1)
-                outputs.Add(node.Dist);
+                return node.Dist;
 
             foreach(int dir in node.Dirs)
             {
@@ -46,13 +45,13 @@ public static class Day17
                         if (totalDist < dists[x,y,dir] && distance >= min)
                         {
                             dists[x,y,dir] = totalDist;
-                            queue.Enqueue(new Node(X: x, Y: y, Dist: totalDist, Dirs: [(dir + 1) % 4, (dir + 3) % 4]));
+                            queue.Enqueue(new Node(X: x, Y: y, Dist: totalDist, Dirs: [(dir + 1) % 4, (dir + 3) % 4]), totalDist);
                         }
                     }
                 }
             }
         }
-        return outputs.Min();
+        return int.MaxValue;
     }
 
 
