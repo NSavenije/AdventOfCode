@@ -6,8 +6,8 @@ public static class Day18
     public static void Solve1()
     {
         string filePath = "src/Day18/18.in";
-        Dictionary<(int, int), (bool, List<Color>)> lgn = ParseInput(filePath);
-        Dictionary<(int, int), (bool, List<Color>)> lagoon = [];
+        Dictionary<(int, int), List<Color>> lgn = ParseInput(filePath);
+        Dictionary<(int, int), List<Color>> lagoon = [];
         int minX = 0, minY = 0;
         foreach((int x, int y) in lgn.Keys)
         {
@@ -36,6 +36,9 @@ public static class Day18
         for(int y = 0; y <= maxY; y++)
         {
             inside = false;
+            bool isLine = false;
+            bool isCup = false;
+            bool isHat = false;
             for(int x = 0; x <= maxX; x++)
             {
                 if(lagoon.TryGetValue((x,y), out var output))
@@ -45,14 +48,46 @@ public static class Day18
                     // If there is a horizontal of 1 thick, flip
                     // If there is a cup or hat, not flip
                     // Only flip @end of range
+
+                    // IF we start a line
                     if (lagoon.TryGetValue((x + 1, y), out _))
                     {
-
+                        if (!isLine)
+                        {
+                            if (lagoon.TryGetValue((x, y - 1), out _))
+                                isCup = true;
+                            else if (lagoon.TryGetValue((x, y + 1), out _))
+                                isHat = true;
+                        }
+                        isLine = true;
                         // Horizontal line continues
+                    }
+                    // OR are on a line
+                    else if (isLine)
+                    {
+                        // OR end a line
+                        if (!lagoon.TryGetValue((x + 1, y), out _))   
+                        {
+                            if (isCup && lagoon.TryGetValue((x, y - 1), out _))
+                            {
+                                inside = inside; // Dont change
+                            }
+                            else if (isHat && lagoon.TryGetValue((x, y + 1), out _))
+                            {
+                                inside = inside; // Dont change
+                            }
+                            else
+                            {
+                                inside = !inside;
+                            }
+                            isHat = false;
+                            isCup = false;
+                        }
+                        isLine = false;
                     }
                     else
                     {
-                        inside = output.Item1 ? inside : !inside;
+                        inside = !inside;
                     }
                     ints[x,y] = 1;
                     count++;
@@ -82,7 +117,7 @@ public static class Day18
         Console.WriteLine(count);
     }
 
-    static Dictionary<(int, int), (bool, List<Color>)> ParseInput(string filePath)
+    static Dictionary<(int, int), List<Color>> ParseInput(string filePath)
     {
         Dictionary<string, (int,int)> dirs = [];
         dirs.Add("R",(1, 0));
@@ -90,7 +125,7 @@ public static class Day18
         dirs.Add("L",(-1,0));
         dirs.Add("U",(0,-1));
 
-        Dictionary<(int, int), (bool, List<Color>)> lagoon = [];
+        Dictionary<(int, int), List<Color>> lagoon = [];
         StreamReader sr = new(filePath);
         string line;
         List<((int,int) dir, int dist, Color color)> lines = [];
@@ -104,7 +139,7 @@ public static class Day18
         }
 
         int x = 0, y = 0;
-        lagoon.Add((x,y),(false,[]));
+        lagoon.Add((x,y),[]);
         int lastDir = 0;
         for(int j = 0; j < lines.Count; j++)
         {
@@ -115,20 +150,9 @@ public static class Day18
                 y += dir.y;
                 // Console.WriteLine($"x{x} y{y}");
                 if (lagoon.TryGetValue((x,y), out _))
-                    lagoon[(x,y)].Item2.Add(color);
+                    lagoon[(x,y)].Add(color);
                 else
-                {
-                    //Cup or Hat? L---J or F---7 U(L|R)D || D(L|R)U
-                    if (i == dist - 1 && lines.Count > j + 1 && (lastDir == (lines[j + 1].dir.Item2 * -1)) && dir.y == 0 && lastDir != 0)
-                    {
-                        lagoon.Add((x,y),(true,[color]));
-                    }
-                    else
-                    {
-                        lagoon.Add((x,y),(false,[color]));
-                    }
-
-                }
+                    lagoon.Add((x,y),[color]);
             }
             lastDir = dir.y;
         }
