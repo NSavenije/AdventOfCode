@@ -77,11 +77,7 @@ public static class Day19
         }
         long total = 0;
         foreach(Part p in parts)
-        {
-            Console.WriteLine(p);
-            List<Rule> rules = workflows["in"];
-            total += Traverse(p, rules, workflows);
-        }
+            total += Traverse(p, workflows["in"], workflows);
         Console.WriteLine(total);
     }
 
@@ -162,13 +158,12 @@ public static class Day19
             matchIndices[i + 1] = rule.Num - 1;
             nextIndices[i] = rule.Num;
         }
-        long match;
-        if (rule.Action == "A")
-            match = CalcScore(matchIndices);
-        else if (rule.Action == "R")
-            match = 0;
-        else
-            match = Solve(workflows[rule.Action], 0, matchIndices, workflows);
+        long match = rule.Action switch
+        {
+            "A" => CalcScore(matchIndices),
+            "R" => 0,
+            _ => Solve(workflows[rule.Action], 0, matchIndices, workflows)
+        };
 
         long nextRule = Solve(rules, ruleIndex + 1, nextIndices, workflows);
         return match + nextRule;
@@ -221,37 +216,16 @@ public static class Day19
     {
         foreach(Rule rule in rules)
         {
-            bool doAction = false;
             int val = GetVariableValue(rule.Comp, p);
-            if (rule.Comp == "D")
-            {
-                doAction = true;
-            }
-            else if (rule.IsLarger && val > rule.Num)
-            {
-                doAction = true;
-            }
-            else if(!rule.IsLarger && val < rule.Num)
-            {
-                doAction = true;
-            }
-            if (doAction)
+            if (rule.Comp == "D" || (rule.IsLarger ? val > rule.Num : val < rule.Num))
             {
                 if (rule.Action == "A")
-                {
                     return p.X + p.M + p.A + p.S;
-                }
                 if (rule.Action == "R")
-                {
                     return 0;
-                }
-                else
-                {
-                    return Traverse(p, workflows[rule.Action],workflows);
-                }
+                return Traverse(p, workflows[rule.Action],workflows);
             }
         }
-        Console.WriteLine("Something went to shit");
         return -1;
     }
 
@@ -267,7 +241,6 @@ public static class Day19
         };
     }
 
-
     readonly record struct Part(int X, int M, int A, int S)
     {
         public int X { get; } = X;
@@ -278,14 +251,6 @@ public static class Day19
 
         public override string ToString() => $"X{X} M{M} A{A} S{S}";
     }
-
-    // public enum Comp{
-    //     X = 0,
-    //     M = 1,
-    //     A = 2,
-    //     S = 3,
-    //     D = 4
-    // }
 
     readonly record struct Rule(string Comp, bool IsLarger, int Num, string Action)
     {
