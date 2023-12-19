@@ -1,5 +1,7 @@
 #nullable disable
 
+using System.Text;
+
 public static class Day19
 {
     public static void Solve1()
@@ -86,7 +88,7 @@ public static class Day19
     public static void Solve2()
     {
         Dictionary<string,List<Rule>> workflows = [];
-        List<string> lines = File.ReadAllLines("src/Day19/19b.in").ToList();
+        List<string> lines = File.ReadAllLines("src/Day19/19.in").ToList();
         foreach(string line in lines)
         {
             if (line == "")
@@ -123,123 +125,105 @@ public static class Day19
             }
         }
         List<Rule> rls = workflows["in"];
-        long result = Solve(rls, [1, 4000, 1, 4000, 1, 4000, 1, 4000], workflows, 0);
+        long result = Solve(rls, 0, [1, 4000, 1, 4000, 1, 4000, 1, 4000], workflows);
         Console.WriteLine(result);
     }
 #pragma warning disable CS1717 // Assignment made to same variable
-    static long Solve(List<Rule> rules, int[] indices, Dictionary<string,List<Rule>> workflows, long acc)
+    static long Solve(List<Rule> rules, int ruleIndex, int[] partIndices, Dictionary<string,List<Rule>> workflows)
     {  
-        foreach(Rule rule in rules)
+        //This will be recursion
+        //Simple cases are encountering D or OOB and action an A or and R
+        Rule rule = rules[ruleIndex];
+        Console.WriteLine(PrintIndices(partIndices));
+        if (rule.Comp == "D" || FullyInBound(rule, partIndices))
         {
-            Console.WriteLine(PrintIndices(indices) + " " + acc);
-            (int low, int high) index = (-1,-1);
-            int i = -1;
-            switch (rule.Comp) 
-            {
-                case "X": 
-                    i = 0;
-                    index = (indices[0], indices[1]);
-                    break;
-                case "M": 
-                    i = 2;
-                    index = (indices[2], indices[3]);
-                    break;
-                case "A": 
-                    i = 4;
-                    index = (indices[4], indices[5]);
-                    break;
-                case "S": 
-                    i = 6;
-                    index = (indices[6], indices[7]);
-                    break;
-                default:
-                    break;
-            }
-            if (rule.Comp == "D")
-            {
-                if (rule.Action == "A")
-                {
-                    return CalcScore(indices);
-                }
-                if (rule.Action == "R")
-                    return 0;
-                else
-                    return Solve(workflows[rule.Action],indices,workflows, acc);
-            }
-            else if (rule.IsLarger && index.high > rule.Num)
-            {
-                // x > 2500, but x = [1000..2000] No action, nothing will be selected
-                // x > 1500  and x = [1000..2000] solve for [1501..2000], continue with [1000.1500]
-                // x >  500  and x = [1000..2000] solve for [1000..2000]
-                // So only do something is index.high > rule.num
-                
-                // The part that false witin the new range should be solved for
-                var temp = indices[i];
-                indices[i] = Math.Max(index.low, rule.Num + 1);
-                if (indices[i] == temp)
-                {
-                    if (rule.Action == "A")
-                        return CalcScore(indices);
-                    if (rule.Action == "R")
-                        return 0;
-                    else
-                        return Solve(workflows[rule.Action], indices, workflows, acc); // Everyone is in the range 
-                }
-                if (rule.Action == "A")
-                    acc += CalcScore(indices);
-                else if (rule.Action == "R")
-                    acc = acc;
-                else
-                    acc += Solve(workflows[rule.Action], indices, workflows, acc); // Some are in the range
-                indices[i] = temp;
-                indices[i + 1] = rule.Num;
-            }
-            else if (!rule.IsLarger && index.low < rule.Num)
-            {
-                // x < 2500, but x = [1000..2000] solve for [1000..2000]
-                // x < 1500  and x = [1000..2000] solve for [1000..1499], continue with [1500..2000]
-                // x <  500  and x = [1000..2000] No action, nothing will be selected
-                // So only do something is index.high > rule.num
-                
-                // The part that false witin the new range should be solved for
-                var temp = indices[i + 1];
-                indices[i + 1] = Math.Min(index.high, rule.Num - 1);
-                if (indices[i + 1] == temp)
-                {
-                    if (rule.Action == "A")
-                        return CalcScore(indices);
-                    if (rule.Action == "R")
-                        return 0;
-                    else
-                        return Solve(workflows[rule.Action], indices, workflows, acc); // Everyone is in the range 
-                }
-                if (rule.Action == "A")
-                    acc += CalcScore(indices);
-                else if (rule.Action == "R")
-                    acc = acc;
-                else
-                    acc += Solve(workflows[rule.Action], indices, workflows, acc); // Some are in the range
-                indices[i + 1] = temp;
-                indices[i] = rule.Num;
-            }
+            if (rule.Action == "R")
+                return 0;
+            if (rule.Action == "A")
+                return CalcScore(partIndices);
+            return Solve(workflows[rule.Action],0,partIndices,workflows);
         }
-        return acc;
+        if(OutOfBounds(rule, partIndices))
+        {
+            return 0;
+        }
+
+        // Now the more interesting cases where we are going to split
+        int[] matchIndices = new List<int>(partIndices).ToArray();
+        int[] nextIndices = new List<int>(partIndices).ToArray();
+    
+        (_, _, int i) = Decode(rule.Comp, partIndices); // i is low index
+        if (rule.IsLarger)
+        {
+            // [1000..2000] > 1500 -> NEXTINDEX [1000..1500] ; MATCHINDEX [1501..2000]
+            nextIndices[i+1] = rule.Num;
+            matchIndices[i] = rule.Num + 1; 
+        }
+        else
+        {
+            // [1000..2000] < 1500 -> MATCH INDEX [1000..1499] ; NEXT INDEX [1500..2000]   
+            matchIndices[i + 1] = rule.Num - 1;
+            nextIndices[i] = rule.Num;
+        }
+        long match;
+        if (rule.Action == "A")
+            match = CalcScore(matchIndices);
+        else if (rule.Action == "R")
+            match = 0;
+        else
+            match = Solve(workflows[rule.Action], 0, matchIndices, workflows);
+
+        long nextRule = Solve(rules, ruleIndex + 1, nextIndices, workflows);
+        return match + nextRule;
     }
 
 #pragma warning restore CS1717 // Assignment made to same variable
 
 //167409079868000
+//167409079868000
+//167010937327821
 //256000000000000
 //1684715944830566400
 //81649509456
 //81649509556
 
+    static bool OutOfBounds(Rule r, int[] indices)
+    {
+        (int low, int high, _) = Decode(r.Comp, indices);
+        if (r.IsLarger)
+            return high <= r.Num; 
+        else
+            return low >= r.Num;
+    }
+
+    static bool FullyInBound(Rule r, int[] indices)
+    {
+        // If fully inbounds ie [0..1000] < 2000 || [3000..4000] > 2000        
+        (int low, int high, _) = Decode(r.Comp, indices);
+        if (r.IsLarger && low > r.Num)
+            return true;
+        if (!r.IsLarger && high < r.Num)
+            return true;
+        return false;
+    }
+
+    static (int,int,int) Decode(string c, int[] indices)
+    {
+        return c switch
+        {
+            "X" => (indices[0], indices[1],0),
+            "M" => (indices[2], indices[3],2),
+            "A" => (indices[4], indices[5],4),
+            _   => (indices[6], indices[7],6)
+        };
+    }
+
     static long CalcScore(int[] i) 
     {
-        long x = i[1] - i[0];
-        long m = i[3] - i[2];
-        long a = i[5] - i[4];
-        long s = i[7] - i[6];
+        long x = i[1] - i[0] + 1;
+        long m = i[3] - i[2] + 1;
+        long a = i[5] - i[4] + 1;
+        long s = i[7] - i[6] + 1;
         return x*m*a*s;
     }
 
