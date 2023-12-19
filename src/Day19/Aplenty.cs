@@ -10,11 +10,7 @@ public static class Day19
         int emptyLineIndex = lines.FindIndex(string.IsNullOrEmpty);
         Dictionary<string,List<Rule>> workflows = ParseWorkflows(lines.GetRange(0, emptyLineIndex));
         List<Part> parts = ParseParts(lines.GetRange(emptyLineIndex + 1, lines.Count - emptyLineIndex - 1));
-        
-        long total = 0;
-        foreach(Part p in parts)
-            total += Traverse(p, workflows["in"], workflows);
-        Console.WriteLine(total);
+        Console.WriteLine(parts.Select(p => Traverse(p, workflows["in"], workflows)).Sum());
     }
 
     public static void Solve2()
@@ -84,10 +80,10 @@ public static class Day19
     {
         // If fully inbounds ie [0..1000] < 2000 || [3000..4000] > 2000        
         (int low, int high, _) = Decode(r.Comp, indices);
-        if (r.IsLarger && low > r.Num)
-            return true;
-        if (!r.IsLarger && high < r.Num)
-            return true;
+        if (r.IsLarger)
+            return low > r.Num;
+        if (!r.IsLarger)
+            return high < r.Num;
         return false;
     }
 
@@ -110,9 +106,6 @@ public static class Day19
         long s = i[7] - i[6] + 1;
         return x*m*a*s;
     }
-
-    static string PrintIndices (int[] i) =>
-        $"({i[0]},{i[1]}),({i[2]},{i[3]}),({i[4]},{i[5]}),({i[6]},{i[7]})";
 
     static int Traverse(Part p, List<Rule> rules, Dictionary<string,List<Rule>> workflows)
     {
