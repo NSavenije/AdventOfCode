@@ -124,17 +124,14 @@ public static class Day19
                 }
             }
         }
-        List<Rule> rls = workflows["in"];
-        long result = Solve(rls, 0, [1, 4000, 1, 4000, 1, 4000, 1, 4000], workflows);
+        long result = Solve(workflows["in"], 0, [1, 4000, 1, 4000, 1, 4000, 1, 4000], workflows);
         Console.WriteLine(result);
     }
-#pragma warning disable CS1717 // Assignment made to same variable
     static long Solve(List<Rule> rules, int ruleIndex, int[] partIndices, Dictionary<string,List<Rule>> workflows)
     {  
         //This will be recursion
         //Simple cases are encountering D or OOB and action an A or and R
         Rule rule = rules[ruleIndex];
-        Console.WriteLine(PrintIndices(partIndices));
         if (rule.Comp == "D" || FullyInBound(rule, partIndices))
         {
             if (rule.Action == "R")
@@ -176,16 +173,6 @@ public static class Day19
         long nextRule = Solve(rules, ruleIndex + 1, nextIndices, workflows);
         return match + nextRule;
     }
-
-#pragma warning restore CS1717 // Assignment made to same variable
-
-//167409079868000
-//167409079868000
-//167010937327821
-//256000000000000
-//1684715944830566400
-//81649509456
-//81649509556
 
     static bool OutOfBounds(Rule r, int[] indices)
     {
