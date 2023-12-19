@@ -6,75 +6,11 @@ public static class Day19
 {
     public static void Solve1()
     {
-        Dictionary<string,List<Rule>> workflows = [];
-        List<Part> parts = [];
         List<string> lines = File.ReadAllLines("src/Day19/19.in").ToList();
-        bool areRules = true;
-        foreach(string line in lines)
-        {
-            if (line == "")
-            {
-                areRules = false;
-                continue;
-            }
-            if (areRules)
-            {
-                var pts = line.Split("{");
-                string lbl = pts[0];
-                var rules = pts[1].Replace("}","").Split(',').ToList();
-                List<Rule> maps = [];
-                foreach(string rule in rules)
-                {
-                    var comp = rule[0] switch
-                    {
-                        'x' => "X",
-                        'm' => "M",
-                        'a' => "A",
-                        's' => "S",
-                        _ => "D",
-                    };
-                    if (comp == "D" || (rule[1] != '<' && rule[1] != '>'))
-                    {
-                        maps.Add(new Rule("D",true,-1,rule));
-                        workflows.Add(lbl,maps);
-                        break;
-                    }
-                    else
-                    {
-                        bool islrgr = rule[1] == '>';
-                        var numAction = rule.Split(':');
-                        int num = int.Parse(numAction[0][2..]);
-                        string action = numAction[1];
-                        maps.Add(new Rule(comp, islrgr, num, action));
-                    }
-                }
-
-            }
-            else // Are parts
-            {
-                var pts = line.Replace("{","").Replace("}","").Split(",").ToList();
-                int x = -1,m = -1,a = -1,s = -1;
-                foreach(string p in pts)
-                {
-                    switch (p[0])
-                    {
-                        case 'x': 
-                            x = int.Parse(p[2..]);
-                            break;
-                        case 'm': 
-                            m = int.Parse(p[2..]);
-                            break;
-                        case 'a': 
-                            a = int.Parse(p[2..]);
-                            break;
-                        default:  
-                            s = int.Parse(p[2..]);
-                            break;
-                    };
-                }
-                parts.Add(new Part(x, m, a, s));
-            }   
-        }
+        int emptyLineIndex = lines.FindIndex(string.IsNullOrEmpty);
+        Dictionary<string,List<Rule>> workflows = ParseWorkflows(lines.GetRange(0, emptyLineIndex));
+        List<Part> parts = ParseParts(lines.GetRange(emptyLineIndex + 1, lines.Count - emptyLineIndex - 1));
+        
         long total = 0;
         foreach(Part p in parts)
             total += Traverse(p, workflows["in"], workflows);
@@ -83,46 +19,12 @@ public static class Day19
 
     public static void Solve2()
     {
-        Dictionary<string,List<Rule>> workflows = [];
         List<string> lines = File.ReadAllLines("src/Day19/19.in").ToList();
-        foreach(string line in lines)
-        {
-            if (line == "")
-                break;
-
-            var pts = line.Split("{");
-            string lbl = pts[0];
-            var rules = pts[1].Replace("}","").Split(',').ToList();
-            List<Rule> maps = [];
-            foreach(string rule in rules)
-            {
-                var comp = rule[0] switch
-                {
-                    'x' => "X",
-                    'm' => "M",
-                    'a' => "A",
-                    's' => "S",
-                    _ => "D",
-                };
-                if (comp == "D" || (rule[1] != '<' && rule[1] != '>'))
-                {
-                    maps.Add(new Rule("D",true,-1,rule));
-                    workflows.Add(lbl,maps);
-                    break;
-                }
-                else
-                {
-                    bool islrgr = rule[1] == '>';
-                    var numAction = rule.Split(':');
-                    int num = int.Parse(numAction[0][2..]);
-                    string action = numAction[1];
-                    maps.Add(new Rule(comp, islrgr, num, action));
-                }
-            }
-        }
+        Dictionary<string,List<Rule>> workflows = ParseWorkflows(lines);
         long result = Solve(workflows["in"], 0, [1, 4000, 1, 4000, 1, 4000, 1, 4000], workflows);
         Console.WriteLine(result);
     }
+    
     static long Solve(List<Rule> rules, int ruleIndex, int[] partIndices, Dictionary<string,List<Rule>> workflows)
     {  
         //This will be recursion
@@ -239,6 +141,77 @@ public static class Day19
             "S" => part.S,
             _ => -1
         };
+    }
+
+    static Dictionary<string,List<Rule>> ParseWorkflows(List<string> lines)
+    {
+        Dictionary<string,List<Rule>> workflows = [];
+        foreach(string line in lines)
+        {
+            if (line == "")
+                break;
+
+            var pts = line.Split("{");
+            string lbl = pts[0];
+            var rules = pts[1].Replace("}","").Split(',').ToList();
+            List<Rule> maps = [];
+            foreach(string rule in rules)
+            {
+                var comp = rule[0] switch
+                {
+                    'x' => "X",
+                    'm' => "M",
+                    'a' => "A",
+                    's' => "S",
+                    _ => "D",
+                };
+                if (comp == "D" || (rule[1] != '<' && rule[1] != '>'))
+                {
+                    maps.Add(new Rule("D",true,-1,rule));
+                    workflows.Add(lbl,maps);
+                    break;
+                }
+                else
+                {
+                    bool islrgr = rule[1] == '>';
+                    var numAction = rule.Split(':');
+                    int num = int.Parse(numAction[0][2..]);
+                    string action = numAction[1];
+                    maps.Add(new Rule(comp, islrgr, num, action));
+                }
+            }
+        }
+        return workflows;
+    }
+
+    static List<Part> ParseParts(List<string> lines)
+    {
+        List<Part> parts = [];
+        foreach(string line in lines)
+        {
+            var pts = line.Replace("{","").Replace("}","").Split(",").ToList();
+            int x = -1,m = -1,a = -1,s = -1;
+            foreach(string p in pts)
+            {
+                switch (p[0])
+                {
+                    case 'x': 
+                        x = int.Parse(p[2..]);
+                        break;
+                    case 'm': 
+                        m = int.Parse(p[2..]);
+                        break;
+                    case 'a': 
+                        a = int.Parse(p[2..]);
+                        break;
+                    default:  
+                        s = int.Parse(p[2..]);
+                        break;
+                };
+            }
+            parts.Add(new Part(x, m, a, s));
+        }
+        return parts;
     }
 
     readonly record struct Part(int X, int M, int A, int S)
