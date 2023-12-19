@@ -5,7 +5,7 @@ public static class Day18
 {
     public static void Solve1()
     {
-        string filePath = "src/Day18/18b.in";
+        string filePath = "src/Day18/18.in";
         List<(long, long)> lagoon = ParseInput(filePath, hexInput: false, out long edge);
         Console.WriteLine("p1: " + CalculateCubicMeters(lagoon,edge));
     }
@@ -25,14 +25,14 @@ public static class Day18
         foreach(var (fst, snd) in combinations)
         {
             result += (fst.x * snd.y) - (fst.y * snd.x);
-            Console.WriteLine($"{fst} {snd}");
+            // Console.WriteLine($"{fst} {snd}");
         }
-        Console.WriteLine("shoelace: " + result);
-        Console.WriteLine("edge: " + edge);
+        // Console.WriteLine("shoelace: " + result);
+        // Console.WriteLine("edge: " + edge);
 
         // Picks theorem
         long area = (result / 2L) - (edge / 2L) + 1;
-        Console.WriteLine("Interior: " + area);
+        // Console.WriteLine("Interior: " + area);
         return area + edge;
     }
 
@@ -68,8 +68,8 @@ public static class Day18
                 x += dist * dir.x;
                 y += dist * dir.y;
                 lagoon.Add((x, y));
-                Console.WriteLine($"{dir} {dist}");
-                Console.WriteLine($"{x} {y}");
+                // Console.WriteLine($"{dir} {dist}");
+                // Console.WriteLine($"{x} {y}");
 
                 edge += dist;
             }
