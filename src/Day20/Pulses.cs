@@ -3,16 +3,13 @@ public static class Day20
 {
     public static void Solve1()
     {
-        List<string> lines = File.ReadAllLines("src/Day20/20.in").ToList();
-        Dictionary<string,Module> modules = ParseInput(lines);
-        HashSet<string> states = [];
-        states.Add(ToState(modules));
+        Dictionary<string,Module> modules = ParseInput("src/Day20/20.in");
         int low = 0;
         int high = 0;
         for(int i = 0; i < 1000; i++)
         {
             (int _low, int _high) = PressButton(modules, out modules);
-            low += _low;
+            low += _low; 
             high += _high;
         }
         Console.WriteLine(low * high);
@@ -20,13 +17,11 @@ public static class Day20
 
     public static void Solve2()
     {
-        List<string> lines = File.ReadAllLines("src/Day20/20.in").ToList();
-        Dictionary<string,Module> modules = ParseInput(lines);
+        Dictionary<string,Module> modules = ParseInput("src/Day20/20.in");
 
         Module broadcaster = modules["broadcaster"];
         List<long> cycles = [];
-        HashSet<string> states = [];
-        states.Add(ToState(modules));
+        HashSet<string> states = [ToState(modules)];
         foreach(var dest in broadcaster.Dests)
         {
             modules["broadcaster"].Dests = [dest];
@@ -51,10 +46,8 @@ public static class Day20
         while(pulses.Count != 0)
         {
             Pulse pulse = pulses.Dequeue();
-            if (pulse.Power == 0)
-                low++;
-            else 
-                high++;
+            low += pulse.Power == 0 ? 1 : 0;
+            high += pulse.Power != 0 ? 1 : 0;
 
             if (modules.TryGetValue(pulse.Label, out var module))
             {
@@ -92,8 +85,9 @@ public static class Day20
     }
 
 
-    static Dictionary<string,Module> ParseInput(List<string> lines)
+    static Dictionary<string,Module> ParseInput(string filePath)
     {
+        List<string> lines = File.ReadAllLines(filePath).ToList();
         Dictionary<string,Module> modules = [];
         foreach(string l in lines)
         {
