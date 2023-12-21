@@ -8,8 +8,8 @@ public static class Day21
 
     public static void Solve2()
     {
-        var input = ParseInput("src/Day21/21b.in");   
-        Console.WriteLine(Solve(input, 64));
+        var input = ParseInput("src/Day21/21.in");   
+        Console.WriteLine(Solve(input, 26501365));
     }
 
     static long Solve(char[,] garden, int steps)
@@ -32,34 +32,22 @@ public static class Day21
 
     static long DoSteps(HashSet<(int x,int y)> coords, HashSet<(int x, int y)> garden, int step, int steps)
     {
+        int[] dx = [1,-1,0,0];
+        int[] dy = [0,0,1,-1];
         if (step == steps)
             return coords.Count;
         
         HashSet<(int,int)> newCoords = [];
         foreach(var (x, y) in coords)
         {
+            for(int i = 0; i < 4; i++)
             //Right
-            if (garden.Contains((x + 1, y)))
+            if (garden.Contains((x + dx[i], y + dy[i])))
             {
-                newCoords.Add((x + 1,y));
-            }
-             //Left
-            if (garden.Contains((x - 1, y)))
-            {
-                newCoords.Add((x - 1,y));
-            }
-            //Down
-            if (garden.Contains((x, y + 1)))
-            {
-                newCoords.Add((x,y + 1));
-            }
-            //Right
-            if (garden.Contains((x, y - 1)))
-            {
-                newCoords.Add((x,y - 1));
+                newCoords.Add((x + dx[i], y + dy[i]));
             }
         }
-        Console.WriteLine(step + 1 + ": " + newCoords.Count);
+        // Console.WriteLine(step + 1 + ": " + newCoords.Count);
         return DoSteps(newCoords,garden,step + 1, steps);
     }
 
