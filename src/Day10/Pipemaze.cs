@@ -287,13 +287,12 @@ public static class Day10
         }
         return res;
     }
-    
+    readonly record struct Coord(int Row, int Col)
+    {
+        public int Row { get; } = Row;
+        public int Col { get; } = Col;
+
+        public override string ToString() => $"({Row}, {Col})";
+    }
 }
 
-record struct Coord(int Row, int Col)
-{
-    public int Row { get; } = Row;
-    public int Col { get; } = Col;
-
-    public override string ToString() => $"({Row}, {Col})";
-}
