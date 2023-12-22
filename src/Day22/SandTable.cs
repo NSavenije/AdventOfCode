@@ -1,5 +1,4 @@
-using System.Text;
-
+using Brick = (int[] p1, int[] p2);
 public static class Day22
 {
     public static void Solve1() => Solve(buildTree: false);
@@ -7,7 +6,7 @@ public static class Day22
     public static void Solve(bool buildTree)
     {
         string filePath = "src/Day22/22.in";
-        List<(int[] p1,int[] p2)> bricks = ParseInput(filePath);
+        List<Brick> bricks = ParseInput(filePath);
         Dictionary<(int x,int y), (int height,int brick)> highest = [];
         HashSet<int> unsupported = [];
         Dictionary<int,HashSet<int>> supportSet = [];
@@ -107,7 +106,7 @@ public static class Day22
     static List<(int[],int[])> ParseInput(string filePath)
     {
         List<string> lines = File.ReadAllLines(filePath).ToList();
-        List<(int[] p1,int[] p2)> bricks = [];
+        List<Brick> bricks = [];
         foreach (var line in lines)
         {
             string[] parts = line.Split("~");
@@ -159,4 +158,5 @@ public static class Day22
 
         return result;
     }
+
 }
