@@ -2,33 +2,21 @@ using System.Text;
 
 public static class Day22
 {
-    public static void Solve1()
+    public static void Solve1() => Solve(buildTree: false);
+    public static void Solve2() => Solve(buildTree: true);
+    public static void Solve(bool buildTree)
     {
         string filePath = "src/Day22/22.in";
-        List<string> lines = File.ReadAllLines(filePath).ToList();
-        List<(int[] p1,int[] p2)> bricks = [];
-
-        foreach (var line in lines)
-        {
-            string[] parts = line.Split("~");
-            int[] p1 = parts[0].Split(",").Select(int.Parse).ToArray();
-            int[] p2 = parts[1].Split(",").Select(int.Parse).ToArray();
-            bricks.Add((p1, p2));
-        }
-
-        int n = bricks.Count;
-        bricks.Sort((x, y) => x.p1[2].CompareTo(y.p1[2]));
-
+        List<(int[] p1,int[] p2)> bricks = ParseInput(filePath);
         Dictionary<(int x,int y), (int height,int brick)> highest = [];
         HashSet<int> unsupported = [];
         Dictionary<int,HashSet<int>> supportSet = [];
-
-        // For every bricks
-        for (int i = 0; i < n; i++)
+        List<List<int>> supportTree = [];
+        for (int i = 0; i < bricks.Count; i++)
         {
+            supportTree.Add([]);
             int maxHeight = -1;
             
-
             for (int x = bricks[i].p1[0]; x <= bricks[i].p2[0]; x++)
             {
                 for (int y = bricks[i].p1[1]; y <= bricks[i].p2[1]; y++)
@@ -37,7 +25,6 @@ public static class Day22
                     {
                         highest[(x,y)] = (0,-1);
                     }
-
                     if (highest[(x,y)].height + 1 > maxHeight)
                     {
                         maxHeight = highest[(x,y)].height + 1;
@@ -50,11 +37,19 @@ public static class Day22
                 }
             }
 
-            // Console.WriteLine($"{i}: {string.Join(',',supportSet[i])}");
-
-            if (supportSet[i].Count == 1)
+            if (!buildTree && supportSet[i].Count == 1)
             {
                 unsupported.Add(supportSet[i].First());
+            }
+            if (buildTree)
+            {
+                foreach (int x in supportSet[i])
+                {
+                    if (x != -1)
+                    {
+                        supportTree[x].Add(i);
+                    }
+                }
             }
 
             int fall = bricks[i].p1[2] - maxHeight;
@@ -72,14 +67,56 @@ public static class Day22
                 }
             }
         }
-        // Console.WriteLine(string.Join(',',unsupported));
-        // Console.WriteLine(ToString(bricks));
-        Console.WriteLine(bricks.Count - unsupported.Count + 1);
+        if (!buildTree)
+            Console.WriteLine(bricks.Count - unsupported.Count + 1);
+        else
+        {
+            Console.WriteLine(supportTree.Select((x, i) => CountDestruction(i, supportTree)).Sum());
+        }
     }
 
-    public static void Solve2()
+    static int CountDestruction(int brick, List<List<int>> tree)
     {
-        
+        int[] parents = new int[tree.Count];
+
+        // Calculate parent counts for each node
+        tree.SelectMany(childNodes => childNodes).ToList().ForEach(child => parents[child]++);
+
+        Queue<int> queue = [];
+        queue.Enqueue(brick);
+        int destructionCount = -1;
+
+        // Process the removal of bricks and their dependencies
+        while (queue.Count > 0)
+        {
+            destructionCount++;
+            int currentBrick = queue.Dequeue();
+            foreach (var child in tree[currentBrick])
+            {
+                parents[child]--;
+                if (parents[child] == 0)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+        }
+
+        return destructionCount;
+    }
+
+    static List<(int[],int[])> ParseInput(string filePath)
+    {
+        List<string> lines = File.ReadAllLines(filePath).ToList();
+        List<(int[] p1,int[] p2)> bricks = [];
+        foreach (var line in lines)
+        {
+            string[] parts = line.Split("~");
+            int[] p1 = parts[0].Split(",").Select(int.Parse).ToArray();
+            int[] p2 = parts[1].Split(",").Select(int.Parse).ToArray();
+            bricks.Add((p1, p2));
+        }
+        bricks.Sort((x, y) => x.p1[2].CompareTo(y.p1[2]));
+        return bricks;
     }
 
     public static string ToString(List<(int[] p1, int[] p2)> bricks)
