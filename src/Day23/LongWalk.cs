@@ -2,27 +2,31 @@ public static class Day23
 {
     public static void Solve1()
     {
-        var lines = File.ReadAllLines("src/Day23/23b.in").ToArray();
+        var lines = File.ReadAllLines("src/Day23/23.in").ToArray();
         Tree mazeTree = MazeParser.ParseMaze(lines);
         // Console.WriteLine(mazeTree.ToString());
         // Console.WriteLine(MazeTraversal.DFS(mazeTree.Root));
-        
+        MazeTraversal mazeTraversal = new();
+        Console.WriteLine(mazeTraversal.DFS(mazeTree.Root));
     }
 
 
 
-    public class Node((int,int) pos)
+    public class Node((int,int) pos, int cols)
     {
         public Dictionary<(int,int),int> DistanceFromNode { get; set; } = [];
         public int DistanceFromRoot { get; set; }
         public int Neigbours;
-        public List<Node> AdjacentNodes { get; } = [];
+        public Dictionary<Node, int> AdjacentNodes { get; } = [];
 
         public (int r,int c) Pos {get; set;} = pos;
 
-        public void AddChild(Node node)
+        public List<Node> Path = [];
+        public int Cols = cols;
+
+        public void AddChild(Node node, int distance)
         {
-            AdjacentNodes.Add(node);
+            AdjacentNodes.Add(node, distance);
         }
     }
 
@@ -86,10 +90,10 @@ public static class Day23
                     int neighbours = CountNeighbours(i,j);
                     if (mazeRows[i][j] != '#' && neighbours != 2)
                     {
-                        nodes.Add((i,j), new Node((i, j))
+                        nodes.Add((i,j), new Node((i, j), cols)
                         {
                             Neigbours = neighbours
-                        }); 
+                        });
                     }
                 }
             }
@@ -98,7 +102,7 @@ public static class Day23
             {
                 HashSet<(int,int)> visitedNodes = [];
                 FloodFill(junction.Key,  junction, 0, visitedNodes);
-                Console.WriteLine($"{junction.Key}: {string.Join(',',junction.Value.AdjacentNodes.Select(n => $"{n.Pos}"))}");
+                Console.WriteLine($"{junction.Key}: {string.Join(',',junction.Value.AdjacentNodes.Select(n => $"{n.Key.Pos}[{n.Value}]"))}");
             }
 
             void FloodFillSteepSlope((int i, int j) pos, KeyValuePair<(int,int),Node> junction, int depth, HashSet<(int,int)> visitedNodes)
@@ -111,12 +115,12 @@ public static class Day23
                     // Console.WriteLine("stopped: backtracking");
                     return;
                 }
-                
+
                 if (pos != junction.Value.Pos && nodes.TryGetValue((i,j), out var node))
                 {
                     // If I found another junction. STOP looking further
                     node.DistanceFromNode[junction.Key] = depth;
-                    junction.Value.AddChild(node);
+                    junction.Value.AddChild(node, depth);
                     // Console.WriteLine("stopped: node found");
                     return;
                 }
@@ -152,12 +156,12 @@ public static class Day23
                     // Console.WriteLine("stopped: backtracking");
                     return;
                 }
-                
+
                 if (pos != junction.Value.Pos && nodes.TryGetValue((i,j), out var node))
                 {
                     // If I found another junction. STOP looking further
                     node.DistanceFromNode[junction.Key] = depth;
-                    junction.Value.AddChild(node);
+                    junction.Value.AddChild(node, depth);
                     // Console.WriteLine("stopped: node found");
                     return;
                 }
@@ -192,78 +196,80 @@ public static class Day23
 
     public class MazeTraversal
     {
-        public static int DFS(Node startNode)
+        List<Node> Path = [];
+        List<List<Node>> Paths = [];
+        public int DFS(Node startNode)
         {
             if (startNode == null)
                 return 0;
 
-            int maxDistance = startNode.DistanceFromRoot; // = 0;
-
-            foreach (var adjacentNode in startNode.AdjacentNodes)
+            HashSet<(int,int)> visited = [];
+            DFSLargestDistanceHelper(startNode, visited);
+            int maxDistance = int.MinValue;
+            foreach(List<Node> path in Paths)
             {
-                adjacentNode.DistanceFromRoot = startNode.DistanceFromRoot + adjacentNode.DistanceFromNode[startNode.Pos];
-                int distance = DFSLargestDistanceHelper(adjacentNode);
-                if (distance > maxDistance)
+                // Console.WriteLine($"{string.Join(',', Path.Select(n => n.Pos))}");
+                if (path.Count != 0 && path.Last().Pos.r == startNode.Cols - 1)
                 {
-                    maxDistance = distance;
+                    int distance = GetDistance(path);
+                    maxDistance = Math.Max(distance, maxDistance);
                 }
             }
-
             return maxDistance;
         }
 
-        private static int DFSLargestDistanceHelper(Node node)
+        private int DFSLargestDistanceHelper(Node node, HashSet<(int,int)> visited)
         {
             if (node == null)
                 return 0;
 
-            int maxChildDistance = node.DistanceFromRoot;
+            if(!visited.Add(node.Pos))
+            {
+                return 0;
+            }
+            else
+            {
+                Path.Add(node);
+                Paths.Add(Path.ToArray().Select(n => n).ToList());
+            }
+
+            int maxDistance = GetDistance(); // Will always be replaced by child.
+            // if (maxDistance == 6681)
+                // Console.WriteLine($"{maxDistance}-{string.Join(',', Path.Select(n => n.Pos))}");
 
             foreach (var adjacentNode in node.AdjacentNodes)
             {
-                adjacentNode.DistanceFromRoot = node.DistanceFromRoot + adjacentNode.DistanceFromNode[node.Pos];
-                int distance = DFSLargestDistanceHelper(adjacentNode);
-                if (distance > maxChildDistance)
-                {
-                    maxChildDistance = distance;
-                }
+
+                int distance = DFSLargestDistanceHelper(adjacentNode.Key, visited);
+                maxDistance = Math.Max(maxDistance, distance);
             }
 
-            return maxChildDistance;
+            visited.Remove(node.Pos);
+            Path.Remove(node);
+
+            return maxDistance;
         }
 
-
-        public static void BFS(Tree maze)
+        private int GetDistance()
         {
-            if (maze.Root == null)
+            int distance = 0;
+            for(int i = 1; i < Path.Count; i++)
             {
-                Console.WriteLine("No entry point found.");
-                return;
+                distance += Path[i].DistanceFromNode[Path[i - 1].Pos];
             }
-
-            Queue<Node> queue = new Queue<Node>();
-            HashSet<Node> visited = new HashSet<Node>();
-
-            maze.Root.DistanceFromRoot = 0; // Set the root distance to 0
-            queue.Enqueue(maze.Root);
-            visited.Add(maze.Root);
-
-            while (queue.Count > 0)
-            {
-                Node current = queue.Dequeue();
-                // Console.WriteLine($"Distance from previous: {current.DistanceFromPrevious}, Distance from root: {current.DistanceFromRoot}");
-
-                foreach (Node neighbor in current.AdjacentNodes)
-                {
-                    if (!visited.Contains(neighbor))
-                    {
-                        neighbor.DistanceFromRoot = current.DistanceFromRoot + 1; // Increment distance from root
-                        queue.Enqueue(neighbor);
-                        visited.Add(neighbor);
-                    }
-                }
-            }
+            return distance;
         }
+
+        private int GetDistance(List<Node> path)
+        {
+            int distance = 0;
+            for(int i = 1; i < path.Count; i++)
+            {
+                distance += path[i].DistanceFromNode[path[i - 1].Pos];
+            }
+            return distance;
+        }
+
     }
 
 }
